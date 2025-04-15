@@ -2,15 +2,10 @@
 #define _HASH_TABLE_H__
 
 #include "my_list.h"
-/*
-struct hashtable_elem_t {
-    const char* string;
-    size_t call_counter;
-};
 
 struct bucket_t {
     list_t data;
-    size_t size;
+    int32_t size;
 };
 
 struct hashtable_t {
@@ -19,15 +14,14 @@ struct hashtable_t {
 };
 
 
-int init();
-int search();
-int insert();
-int dstr();
+hashtable_t init();
+int search(hashtable_t* htbl, const char* word);
+int insert(hashtable_t* htbl, const char* word);
+void dstr(hashtable_t* htbl);
 
-size_t hash(const char* string);
+size_t djb2_hash(const char* string);
 
 //int getSize();
 //int bucketSize();
 
-*/
 #endif

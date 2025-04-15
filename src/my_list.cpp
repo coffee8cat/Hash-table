@@ -153,13 +153,13 @@ int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem)
 lst_index_t list_search(list_t* lst, lst_data_t elem) {
     assert(lst);
 
-    lst_index_t curr_elem = NEXT(0);
+    lst_index_t curr_elem = PREV(0);
 
     while(curr_elem != 0) {
         if (strncmp(lst -> data[curr_elem], elem, 16) == 0) {
             return curr_elem;
         }
-        curr_elem = NEXT(curr_elem);
+        curr_elem = PREV(curr_elem);
     }
 
     return 0;
