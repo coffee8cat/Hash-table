@@ -80,7 +80,7 @@ hashtable_elem_t* search(hashtable_t* htbl, const char* word) {
     size_t bucket_index = hash % n_buckets;
 
     //printf("bucket index for search of \"%16s\" = %ld\n", word, bucket_index);
-    return list_search(&(htbl -> buckets[bucket_index].data), hash);
+    return list_search_asm(&(htbl -> buckets[bucket_index].data), hash);
 }
 
 hashtable_elem_t* search_str(hashtable_t* htbl, const char* word) {
@@ -93,7 +93,7 @@ hashtable_elem_t* search_str(hashtable_t* htbl, const char* word) {
     size_t bucket_index = hash % n_buckets;
 
     //printf("bucket index for search of \"%16s\" = %ld\n", word, bucket_index);
-    return list_search(&(htbl -> buckets[bucket_index].data), hash);
+    return list_search_asm(&(htbl -> buckets[bucket_index].data), hash);
 }
 
 int insert(hashtable_t* htbl, const char* word) {
@@ -111,7 +111,7 @@ int insert(hashtable_t* htbl, const char* word) {
     list_t* temp_lst = &(temp_bucket -> data);
 
     // check already stored duplicates
-    if (list_search(temp_lst, hash) != NULL) {
+    if (list_search_asm(temp_lst, hash) != NULL) {
         return 1;
     }
 

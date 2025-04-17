@@ -158,7 +158,6 @@ lst_data_t* list_search(list_t* lst, size_t key) {
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
         if (temp_data.hash == key) {
-            (temp_data.counter)++;
             return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);

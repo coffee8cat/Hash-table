@@ -65,6 +65,14 @@ int main() {
     }
     else { printf("no..."); }
 
+
+    strcpy(test_buf,  "......");
+    search_res = search(&htbl, test_buf);
+    if (search_res) {
+        printf("search \".......\" result: [%16s], %ld", search_res -> buffer, search_res -> counter);
+    }
+    else { printf("no..."); }
+
     if (fclose(html_stream) != 0)   { perror("html stream not closed"); }
     if (fclose(input_fp) != 0)      { perror("input stream not closed"); }
 

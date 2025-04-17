@@ -1,5 +1,6 @@
 SOURCES_DIR = src
-SOURCES = $(wildcard $(SOURCES_DIR)/*.cpp)
+C_SOURCES = $(wildcard $(SOURCES_DIR)/*.cpp)
+ASM_SOURCES = $(wildcard $(SOURCES_DIR)/*.asm)
 
 BUILD_DIR = build
 OBJ_DIR = obj
@@ -18,7 +19,8 @@ clean_data:
 	rm data/*.dot
 
 compile:
-	g++ $(SOURCES) -O0 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR)
+	nasm -f elf64 $(SOURCES_DIR)/my_funcs.asm -o $(SOURCES_DIR)/my_funcs.o
+	gcc $(C_SOURCES) $(SOURCES_DIR)/my_funcs.o -O0 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR)
 
 
 run:
