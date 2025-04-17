@@ -3,6 +3,9 @@
 
 #include "my_list.h"
 
+#include <cstdint>
+#include <x86intrin.h>
+
 struct bucket_t {
     list_t data;
     int32_t size;
@@ -15,13 +18,13 @@ struct hashtable_t {
 
 
 hashtable_t init();
-int search(hashtable_t* htbl, const char* word);
+hashtable_elem_t* search(hashtable_t* htbl, const char* word);
 int insert(hashtable_t* htbl, const char* word);
 void dstr(hashtable_t* htbl);
 
-size_t djb2_hash(const char* string);
+uint64_t MurmurHash64A(const void *key, size_t len, uint64_t seed);
+size_t djb2_hash(const char* string, size_t string_len);
 
-//int getSize();
-//int bucketSize();
+void get_spectrum(hashtable_t* htbl);
 
 #endif

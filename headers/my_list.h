@@ -6,8 +6,15 @@
 #include <string.h>
 #include <assert.h>
 
+//#include "hash_table.h"
 
-typedef const char* lst_data_t;
+struct hashtable_elem_t {
+    char   buffer[16];
+    size_t hash;
+    size_t counter;
+};
+
+typedef hashtable_elem_t lst_data_t;
 typedef int32_t lst_index_t;
 typedef int (lst_cmp_func)(void*, void*);
 
@@ -15,7 +22,7 @@ const lst_index_t realloc_coeff = 2;
 
 struct list_t
 {
-    lst_data_t* data;
+    lst_data_t*  data;
     lst_index_t* next;
     lst_index_t* prev;
 
@@ -34,7 +41,7 @@ inline lst_data_t* list_get_front(list_t* lst);
 inline lst_data_t* list_get_back(list_t* lst);
 
 int list_push_back (list_t* lst, lst_data_t elem);
-lst_index_t list_search(list_t* lst, lst_data_t elem);
+lst_data_t* list_search(list_t* lst, size_t key);
 int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem);
 int list_expand(list_t* lst);
 int list_erase(list_t* lst, lst_index_t i);

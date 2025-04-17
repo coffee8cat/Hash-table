@@ -19,8 +19,8 @@ FILE* prepare_to_dump()
 int list_dump(list_t* lst, FILE* html_stream)
 {
     static lst_index_t dump_counter = 1;
-    char dot_file_name[BUFSIZ] = "";
-    char png_file_name[BUFSIZ] = "";
+    char dot_file_name[32] = "";
+    char png_file_name[32] = "";
     sprintf(dot_file_name, "data/dump%d.dot", dump_counter);
     sprintf(png_file_name, "data/dump%d.png", dump_counter);
 
@@ -64,26 +64,26 @@ int make_dot_file(list_t* lst, FILE* fp)
     int i = lst -> free;
     fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#163bf3\","
                     "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i], NEXT(i), PREV(i));
+                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
     i = NEXT(i);
     while (i != 0)
     {
         fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#39CCCC\","
                     "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i], NEXT(i), PREV(i));
+                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
         i = NEXT(i);
     }
 
 
     fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#BE08F0\","
                 "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                0, 0, lst -> data[0], NEXT(0), PREV(0));
+                0, 0, lst -> data[0].buffer, NEXT(0), PREV(0));
     i = NEXT(0);
     while (i != 0)
     {
         fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#2ECC40\","
                     "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i], NEXT(i), PREV(i));
+                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
         i = NEXT(i);
     }
 
@@ -128,7 +128,7 @@ int dump_to_html(list_t* lst, char* png_file_name, FILE* html_stream)
     fprintf(html_stream, "curr data next prev\n");
     for (lst_index_t i = 0; i < lst -> capacity; i++)
     {
-        fprintf(html_stream, "%4d %s %4d %4d\n", i, lst -> data[i], lst -> next[i], lst -> prev[i]);
+        fprintf(html_stream, "%4d %s %4d %4d\n", i, lst -> data[i].buffer, lst -> next[i], lst -> prev[i]);
     }
     fprintf(html_stream, "\ncapacity: %d\n", lst -> capacity);
     fprintf(html_stream, "free: %d\n", lst -> free);

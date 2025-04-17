@@ -150,19 +150,21 @@ int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem)
     return 0;
 }
 
-lst_index_t list_search(list_t* lst, lst_data_t elem) {
+lst_data_t* list_search(list_t* lst, size_t key) {
     assert(lst);
 
     lst_index_t curr_elem = PREV(0);
 
     while(curr_elem != 0) {
-        if (strncmp(lst -> data[curr_elem], elem, 16) == 0) {
-            return curr_elem;
+        lst_data_t temp_data = lst -> data[curr_elem];
+        if (temp_data.hash == key) {
+            (temp_data.counter)++;
+            return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);
     }
 
-    return 0;
+    return NULL;
 }
 
 int list_expand(list_t* lst)
@@ -171,7 +173,7 @@ int list_expand(list_t* lst)
 
     // ALLOCATING MEMORY FOR BIGGER LIST ==========================================================================================================
 
-    lst_data_t* data_temp = (lst_data_t*)realloc(lst -> data, realloc_coeff * lst -> capacity * sizeof(lst_data_t));
+    lst_data_t* data_temp  = (lst_data_t*) realloc(lst -> data, realloc_coeff * lst -> capacity * sizeof(lst_data_t));
     lst_index_t* next_temp = (lst_index_t*)realloc(lst -> next, realloc_coeff * lst -> capacity * sizeof(lst_index_t));
     lst_index_t* prev_temp = (lst_index_t*)realloc(lst -> prev, realloc_coeff * lst -> capacity * sizeof(lst_index_t));
 

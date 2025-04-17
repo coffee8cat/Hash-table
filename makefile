@@ -18,7 +18,7 @@ clean_data:
 	rm data/*.dot
 
 compile:
-	g++ $(SOURCES) -O2 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR)
+	g++ $(SOURCES) -O0 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR)
 
 
 run:
