@@ -1,6 +1,6 @@
 #include "hash_table.h"
 
-size_t n_buckets = 32767;
+size_t n_buckets = 2047;
 size_t bucket_size = 20;
 
 
@@ -110,7 +110,7 @@ void get_spectrum(hashtable_t* htbl) {
         }
     }
 
-    FILE* fp = fopen("data/distribution.csv", "w");
+    FILE* fp = fopen("data/bucket_distribution.csv", "w");
     if (fp) {
         fprintf(fp, "Bucket,Count\n");
         for (int i = 0; i < n_buckets; i++) {
@@ -118,45 +118,67 @@ void get_spectrum(hashtable_t* htbl) {
         }
 
         fclose(fp);
-        printf("Распределение сохранено в data/distribution.csv\n");
-
-
-        FILE *gnuplot_pipe = fopen("plot.gp", "w");
-        if (gnuplot_pipe) {
-            fprintf(gnuplot_pipe, "set datafile separator comma\n"
-                    "set terminal pngcairo size 800,600 enhanced font \'Verdana,10\'\n"
-                    "set output \'crc32_distribution.png\'\n\n"
-                    "set title \"CRC32 Hash Distribution\"\n"
-                    "set xlabel \"Bucket\"\n"
-                    "set ylabel \"Count\"\n"
-                    "set grid\n"
-                    "set boxwidth 0.8 relative\n"
-                    "set style fill solid\n\n"
-                    "plot \'data/distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n");
-
-            fclose(gnuplot_pipe);
-        }
-        else {
-            perror("popen gnuplot");
-        }
-
-        int result = system("gnuplot plot.gp");
-        if (result != 0) {
-            printf("Ошибка при запуске Gnuplot. Код возврата: %d\n", result);
-        } else {
-            printf("График успешно построен и сохранён.\n");
-        }
+        printf("Распределение сохранено в data/bucket_distribution.csv\n");
     }
     else {
         perror("fopen");
     }
 
+    FILE* sizes_fp = fopen("data/sizes_distribution.csv", "w");
+    if (sizes_fp) {
+        fprintf(fp, "Size,Count\n");
+        for (int i = 0; i < 20; i++) {
+            fprintf(fp, "%d,%d\n", i, bucket_size_counters[i]);
+        }
+
+        fclose(fp);
+        printf("Распределение сохранено в data/sizes_distribution.csv\n");
+    }
+    else {
+        perror("fopen");
+    }
+
+    FILE *gnuplot_pipe = fopen("plot.gp", "w");
+    if (gnuplot_pipe) {
+        fprintf(gnuplot_pipe, "set datafile separator comma\n"
+                "set terminal pngcairo size 800,600 enhanced font \'Verdana,10\'\n"
+                "set output \'murmur_bucket_distribution.png\'\n\n"
+                "set title \"Murmur64A Hash Bucket Distribution\"\n"
+                "set xlabel \"Bucket\"\n"
+                "set ylabel \"Count\"\n"
+                "set grid\n"
+                "set boxwidth 0.8 relative\n"
+                "set style fill solid\n\n"
+                "plot \'data/bucket_distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n\n\n"
+
+                "set datafile separator comma\n"
+                "set terminal pngcairo size 800,600 enhanced font \'Verdana,10\'\n"
+                "set output \'murmur_sizes_distribution.png\'\n\n"
+                "set title \"Murmur64A Hash Sizes Distribution\"\n"
+                "set xlabel \"Size\"\n"
+                "set ylabel \"Count\"\n"
+                "set grid\n"
+                "set boxwidth 0.8 relative\n"
+                "set style fill solid\n\n"
+                "plot \'data/sizes_distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n");
+
+        fclose(gnuplot_pipe);
+    }
+    else {
+        perror("popen gnuplot");
+    }
+
+    int result = system("gnuplot plot.gp");
+    if (result != 0) {
+        printf("Ошибка при запуске Gnuplot. Код возврата: %d\n", result);
+    } else {
+        printf("График успешно построен и сохранён.\n");
+    }
+
     printf("--- Hashtable spectrum ---\n\n");
     printf("size | counter\n");
-    /*
-    for (size_t i = 0; i < 256; i++) {
+    for (size_t i = 0; i < 16; i++) {
         printf("%4ld | %7ld\n", i, bucket_size_counters[i]);
     }
-    */
     printf("Out of range (>256): %ld\n", out_of_range_counter);
 }
