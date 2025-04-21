@@ -1,15 +1,15 @@
 /*
 list_t init_list() {
     size_t list_init_size = 40;
-    size_t lst_size = n_buckets * list_init_size;
+    size_t lst_size = BUCKETS_NUM * list_init_size;
     list_t lst = {};
 
     lst.data = (lst_data_t*) calloc(lst_size,  sizeof(lst_data_t));
     lst.next = (lst_index_t*)calloc(lst_size,  sizeof(lst_index_t));
     lst.prev = (lst_index_t*)calloc(lst_size,  sizeof(lst_index_t));
-    lst.free = (lst_index_t*)calloc(n_buckets, sizeof(lst_index_t));
+    lst.free = (lst_index_t*)calloc(BUCKETS_NUM, sizeof(lst_index_t));
 
-    for (size_t i = 0; i < n_buckets; i++) {
+    for (size_t i = 0; i < BUCKETS_NUM; i++) {
         lst.free[i] = i * list_init_size + 1;
         lst.next[i * list_init_size] = 0;
         lst.prev[i * list_init_size] = 0;

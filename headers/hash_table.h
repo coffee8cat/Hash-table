@@ -18,8 +18,8 @@ struct hashtable_t {
 
 
 hashtable_t init();
-hashtable_elem_t* search(hashtable_t* htbl, char word[16]);
-int insert(hashtable_t* htbl, char word[16]);
+hashtable_elem_t* search(hashtable_t* htbl, char word[STRING_SIZE]);
+int insert(hashtable_t* htbl, char word[STRING_SIZE]);
 void destroy_hashtable(hashtable_t* htbl);
 
 
@@ -29,5 +29,7 @@ uint64_t MurmurHash64A(const void *key, size_t len, uint64_t seed);
 size_t djb2_hash(const char* string, size_t string_len);
 
 void get_spectrum(hashtable_t* htbl);
+void collect_distr_data(hashtable_t* htbl, uint16_t* buckets_sizes, size_t* bucket_size_counters, size_t* out_of_range_counter);
+void save_distr_plot_descr(uint16_t* buckets_sizes, size_t* bucket_size_counters);
 
 #endif

@@ -1,6 +1,7 @@
 #include "my_list.h"
 #include "hash_table.h"
 #include "text_processing.h"
+#include "params.h"
 
 #include <cstdint>
 #include <x86intrin.h>
@@ -25,14 +26,13 @@ int main() {
     FILE* input_fp = fopen(processed_text, "r");
     if (input_fp == NULL) { perror("Stream of processed text not opened"); }
 
-    const size_t buffer_size = 16;
-    char buffer[buffer_size] = {};
+    char buffer[STRING_SIZE] = {};
 
 
     uint64_t start = __rdtsc();
     size_t counter = 0;
 
-    while (fgets(buffer, buffer_size, input_fp)) {
+    while (fgets(buffer, STRING_SIZE, input_fp)) {
         insert(&htbl, buffer);
         counter++;
     }
@@ -52,7 +52,7 @@ int main() {
     start = __rdtsc();
     counter = 0;
 
-    while (fgets(buffer, buffer_size, input_fp)) {
+    while (fgets(buffer, STRING_SIZE, input_fp)) {
         search(&htbl, buffer);
         counter++;
     }
@@ -63,7 +63,7 @@ int main() {
     printf("ticks: %ld\n", end - start);
     printf("counter = %ld\n", counter);
 
-    char test_buf[16] = "you";
+    char test_buf[STRING_SIZE] = "you";
     hashtable_elem_t* search_res = search(&htbl, test_buf);
     if (search_res) {
         fprintf(stderr, "search \"you\" result: [%16s], %ld\n", search_res -> buffer, search_res -> counter);

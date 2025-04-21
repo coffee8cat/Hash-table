@@ -1,6 +1,6 @@
 #include "my_optimized_funcs.h"
 
-bool my_str16cmp(char word1[16], char word2[16]) {
+bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
     assert(word1);
     assert(word2);
 

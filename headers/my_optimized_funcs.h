@@ -5,6 +5,8 @@
 #include <x86intrin.h>
 #include <assert.h>
 
-bool my_str16cmp(char word1[16], char word2[16]);
+#include "params.h"
+
+bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]);
 
 #endif

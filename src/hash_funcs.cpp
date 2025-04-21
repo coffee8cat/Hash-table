@@ -1,6 +1,5 @@
 #include "hash_table.h"
 
-// Таблица CRC32
 static uint32_t crc32_table[256] = {};
 
 void init_crc32_table() {

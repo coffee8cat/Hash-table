@@ -7,9 +7,10 @@
 #include <assert.h>
 
 //#include "hash_table.h"
+#include "params.h"
 
 struct hashtable_elem_t {
-    char   buffer[16];
+    char   buffer[STRING_SIZE];
     size_t hash;
     size_t counter;
 };
@@ -44,7 +45,7 @@ int list_push_back (list_t* lst, lst_data_t elem);
 
 extern "C" lst_data_t* list_search_asm(void* list, unsigned long key);
 
-lst_data_t* list_search(list_t* lst, char key[16]);
+lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]);
 int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem);
 int list_expand(list_t* lst);
 int list_erase(list_t* lst, lst_index_t i);
