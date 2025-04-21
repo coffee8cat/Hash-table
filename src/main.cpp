@@ -7,6 +7,8 @@
 
 int main() {
 
+    init_crc32_table();
+
     const char processed_text[] = "text/War-and-Peace-processed.txt";
     const char test_for_search[] = "text/War-and-Peace-test.txt";
 
@@ -21,12 +23,15 @@ int main() {
     hashtable_t htbl = init();
 
     FILE* input_fp = fopen(processed_text, "r");
+    if (input_fp == NULL) { perror("Stream of processed text not opened"); }
+
     const size_t buffer_size = 16;
     char buffer[buffer_size] = {};
 
 
     uint64_t start = __rdtsc();
     size_t counter = 0;
+
     while (fgets(buffer, buffer_size, input_fp)) {
         insert(&htbl, buffer);
         counter++;
@@ -38,7 +43,7 @@ int main() {
     printf("ticks: %ld\n", end - start);
     printf("counter = %ld\n", counter);
 
-    if (fclose(input_fp) != 0)      { perror("input stream not closed"); }
+    if (fclose(input_fp) != 0) { perror("input stream not closed"); }
 
 //===============================================================================================================================
 
@@ -61,24 +66,24 @@ int main() {
     char test_buf[16] = "you";
     hashtable_elem_t* search_res = search(&htbl, test_buf);
     if (search_res) {
-        printf("search \"you\" result: [%16s], %ld", search_res -> buffer, search_res -> counter);
+        fprintf(stderr, "search \"you\" result: [%16s], %ld\n", search_res -> buffer, search_res -> counter);
     }
-    else { printf("no..."); }
+    else { fprintf(stderr, "Could not find \"yes\" in hash table\n"); }
 
 
     strcpy(test_buf,  "......");
     search_res = search(&htbl, test_buf);
     if (search_res) {
-        printf("search \".......\" result: [%16s], %ld", search_res -> buffer, search_res -> counter);
+        fprintf(stderr, "search \".......\" result: [%16s], %ld\n", search_res -> buffer, search_res -> counter);
     }
-    else { printf("no..."); }
+    else { fprintf(stderr, "Could not find \".....\" in hash table\n"); }
 
-    if (fclose(html_stream) != 0)   { perror("html stream not closed"); }
-    if (fclose(input_fp) != 0)      { perror("input stream not closed"); }
+    if (fclose(html_stream) != 0) { perror("html stream not closed"); }
+    if (fclose(input_fp)    != 0) { perror("input stream not closed"); }
 
     get_spectrum(&htbl);
 
-    dstr(&htbl);
+    destroy_hashtable(&htbl);
 
     return 0;
 }

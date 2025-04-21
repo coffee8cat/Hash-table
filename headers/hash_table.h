@@ -18,10 +18,13 @@ struct hashtable_t {
 
 
 hashtable_t init();
-hashtable_elem_t* search(hashtable_t* htbl, const char* word);
-int insert(hashtable_t* htbl, const char* word);
-void dstr(hashtable_t* htbl);
+hashtable_elem_t* search(hashtable_t* htbl, char word[16]);
+int insert(hashtable_t* htbl, char word[16]);
+void destroy_hashtable(hashtable_t* htbl);
 
+
+void init_crc32_table();
+uint32_t crc32(uint8_t *data, size_t length);
 uint64_t MurmurHash64A(const void *key, size_t len, uint64_t seed);
 size_t djb2_hash(const char* string, size_t string_len);
 

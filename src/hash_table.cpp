@@ -1,6 +1,6 @@
 #include "hash_table.h"
 
-size_t n_buckets = 1023;
+size_t n_buckets = 32767;
 size_t bucket_size = 20;
 
 
@@ -18,90 +18,40 @@ hashtable_t init() {
     return htbl;
 }
 
-uint64_t MurmurHash64A(const void *key, size_t len, uint64_t seed) {
-    const uint64_t m = 0xc6a4a7935bd1e995ULL;
-    const int r = 47;
-
-    uint64_t h = seed ^ (len * m);
-
-    const uint64_t *data = (const uint64_t *)key;
-    const uint64_t *end = data + (len / 8);
-
-    while (data != end) {
-        uint64_t k = *data++;
-
-        k *= m;
-        k ^= k >> r;
-        k *= m;
-
-        h ^= k;
-        h *= m;
+void zero_after_null(char* data, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        if (data[i] == 0) {
+            for (size_t j = i + 1; j < size; j++) {
+                data[j] = 0;
+            }
+            break;
+        }
     }
-
-    const unsigned char *data2 = (const unsigned char *)data;
-    switch (len & 7) {
-        case 7: h ^= (uint64_t)(data2[6]) << 48;
-        case 6: h ^= (uint64_t)(data2[5]) << 40;
-        case 5: h ^= (uint64_t)(data2[4]) << 32;
-        case 4: h ^= (uint64_t)(data2[3]) << 24;
-        case 3: h ^= (uint64_t)(data2[2]) << 16;
-        case 2: h ^= (uint64_t)(data2[1]) << 8;
-        case 1: h ^= (uint64_t)(data2[0]);
-                h *= m;
-    }
-
-    h ^= h >> r;
-    h *= m;
-    h ^= h >> r;
-
-    return h;
 }
 
-size_t djb2_hash(const char* string, size_t string_len) {
-
-    size_t hash = 5381;
-    char c = 0;
-
-    for (size_t i = 0; i < string_len; i++) {
-        c = *(string++);
-        hash = ((hash << 5) + hash) + c; // hash * 33 + c
-    }
-
-    return hash;
-}
-
-hashtable_elem_t* search(hashtable_t* htbl, const char* word) {
+hashtable_elem_t* search(hashtable_t* htbl, char word[16]) {
     assert(htbl);
     assert(word);
 
     size_t word_len = strlen(word);
+    zero_after_null(word, 16);
 
+    //size_t hash = crc32((uint8_t*)word, word_len);
     size_t hash = MurmurHash64A(word, word_len, 0x1234ABCD);
     size_t bucket_index = hash % n_buckets;
 
     //printf("bucket index for search of \"%16s\" = %ld\n", word, bucket_index);
-    return list_search_asm(&(htbl -> buckets[bucket_index].data), hash);
+    return list_search(&(htbl -> buckets[bucket_index].data), word);
 }
 
-hashtable_elem_t* search_str(hashtable_t* htbl, const char* word) {
+int insert(hashtable_t* htbl, char word[16]) {
     assert(htbl);
     assert(word);
 
     size_t word_len = strlen(word);
+    zero_after_null(word, 16);
 
-    size_t hash = MurmurHash64A(word, word_len, 0x1234ABCD);
-    size_t bucket_index = hash % n_buckets;
-
-    //printf("bucket index for search of \"%16s\" = %ld\n", word, bucket_index);
-    return list_search_asm(&(htbl -> buckets[bucket_index].data), hash);
-}
-
-int insert(hashtable_t* htbl, const char* word) {
-    assert(htbl);
-    assert(word);
-
-    size_t word_len = strlen(word);
-
+    //size_t hash = crc32((uint8_t*)word, word_len);
     size_t hash = MurmurHash64A(word, word_len, 0x1234ABCD);
     size_t index = hash % n_buckets;
 
@@ -111,7 +61,7 @@ int insert(hashtable_t* htbl, const char* word) {
     list_t* temp_lst = &(temp_bucket -> data);
 
     // check already stored duplicates
-    if (list_search_asm(temp_lst, hash) != NULL) {
+    if (list_search(temp_lst, word) != NULL) {
         return 1;
     }
 
@@ -124,7 +74,7 @@ int insert(hashtable_t* htbl, const char* word) {
     return 0;
 }
 
-void dstr(hashtable_t* htbl) {
+void destroy_hashtable(hashtable_t* htbl) {
     assert(htbl);
 
     for (size_t i = 0; i < n_buckets; i++) {
@@ -137,31 +87,76 @@ void dstr(hashtable_t* htbl) {
 void get_spectrum(hashtable_t* htbl) {
     assert(htbl);
 
-    size_t bucket_size_counters[128] = {};
+    const size_t htbl_size = htbl -> size;
+
+    uint16_t buckets_sizes[htbl_size] = {};
+    size_t bucket_size_counters[256] = {};
 
     size_t sum_of_bucket_size = 0;
     float avg_bucket_size = 0;
     size_t min_bucket_size = 0;
-    size_t temp_size = 0;
+    uint16_t temp_size = 0;
 
-    const size_t htbl_size = htbl -> size;
+    size_t out_of_range_counter = 0;
+
     for (size_t i = 0; i < htbl_size; i++) {
-        temp_size = htbl -> buckets[i].size;
-        (bucket_size_counters[temp_size])++;
+        temp_size = (uint16_t)htbl -> buckets[i].size;
+        buckets_sizes[i] = temp_size;
+        if (temp_size < 256) {
+            (bucket_size_counters[temp_size])++;
+        }
+        else {
+            out_of_range_counter++;
+        }
+    }
+
+    FILE* fp = fopen("data/distribution.csv", "w");
+    if (fp) {
+        fprintf(fp, "Bucket,Count\n");
+        for (int i = 0; i < n_buckets; i++) {
+            fprintf(fp, "%d,%d\n", i, buckets_sizes[i]);
+        }
+
+        fclose(fp);
+        printf("Распределение сохранено в data/distribution.csv\n");
+
+
+        FILE *gnuplot_pipe = fopen("plot.gp", "w");
+        if (gnuplot_pipe) {
+            fprintf(gnuplot_pipe, "set datafile separator comma\n"
+                    "set terminal pngcairo size 800,600 enhanced font \'Verdana,10\'\n"
+                    "set output \'crc32_distribution.png\'\n\n"
+                    "set title \"CRC32 Hash Distribution\"\n"
+                    "set xlabel \"Bucket\"\n"
+                    "set ylabel \"Count\"\n"
+                    "set grid\n"
+                    "set boxwidth 0.8 relative\n"
+                    "set style fill solid\n\n"
+                    "plot \'data/distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n");
+
+            fclose(gnuplot_pipe);
+        }
+        else {
+            perror("popen gnuplot");
+        }
+
+        int result = system("gnuplot plot.gp");
+        if (result != 0) {
+            printf("Ошибка при запуске Gnuplot. Код возврата: %d\n", result);
+        } else {
+            printf("График успешно построен и сохранён.\n");
+        }
+    }
+    else {
+        perror("fopen");
     }
 
     printf("--- Hashtable spectrum ---\n\n");
     printf("size | counter\n");
-    for (size_t i = 0; i < 128; i++) {
+    /*
+    for (size_t i = 0; i < 256; i++) {
         printf("%4ld | %7ld\n", i, bucket_size_counters[i]);
     }
-}
-
-int check_collisions(hashtable_t* htbl, FILE* input_fp) {
-    assert(htbl);
-    assert(input_fp);
-
-
-
-
+    */
+    printf("Out of range (>256): %ld\n", out_of_range_counter);
 }

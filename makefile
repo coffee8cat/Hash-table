@@ -19,8 +19,7 @@ clean_data:
 	rm data/*.dot
 
 compile:
-	nasm -f elf64 $(SOURCES_DIR)/my_funcs.asm -o $(SOURCES_DIR)/my_funcs.o
-	gcc $(C_SOURCES) $(SOURCES_DIR)/my_funcs.o -O0 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR)
+	gcc $(C_SOURCES) -O2 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
 
 
 run:

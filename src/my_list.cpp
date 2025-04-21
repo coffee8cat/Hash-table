@@ -1,4 +1,5 @@
 #include "my_list.h"
+#include "my_optimized_funcs.h"
 
 const lst_index_t lst_default_capacity = 20;
 
@@ -150,14 +151,14 @@ int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem)
     return 0;
 }
 
-lst_data_t* list_search(list_t* lst, size_t key) {
+lst_data_t* list_search(list_t* lst, char key[16]) {
     assert(lst);
 
     lst_index_t curr_elem = PREV(0);
 
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
-        if (temp_data.hash == key) {
+        if (my_str16cmp(temp_data.buffer, key)) {
             return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);

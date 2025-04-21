@@ -7,8 +7,8 @@ const char test_for_search[] = "text/War-and-Peace-test.txt";
 void process_raw_text() {
 
     FILE* input_fp  = fopen(raw_text, "r");
-    FILE* output_fp = fopen(processed_text, "w");
     if (input_fp  == NULL) { perror("Could not open input file");  return; }
+    FILE* output_fp = fopen(processed_text, "w");
     if (output_fp == NULL) { perror("Could not open output file"); return; }
 
     bool prev_ch_is_alpha = 0;
@@ -33,8 +33,8 @@ void process_raw_text() {
 void prepare_test_for_search() {
 
     FILE* input_fp  = fopen(processed_text, "r");
-    FILE* output_fp = fopen(test_for_search, "w");
     if (input_fp  == NULL) { perror("Could not open input file");  return; }
+    FILE* output_fp = fopen(test_for_search, "w");
     if (output_fp == NULL) { perror("Could not open output file"); return; }
 
     char ch = 0;
