@@ -6,6 +6,9 @@
 #include <cstdint>
 #include <x86intrin.h>
 
+typedef void              (InsertFunc)(hashtable_t*, char[STRING_SIZE]);
+typedef hashtable_elem_t* (SearchFunc)(hashtable_t*, char[STRING_SIZE]);
+
 struct bucket_t {
     list_t data;
     int32_t size;
@@ -14,13 +17,15 @@ struct bucket_t {
 struct hashtable_t {
     bucket_t* buckets;
     size_t size;
+    InsertFunc* insert;
+    SearchFunc* search;
 };
 
 
 hashtable_t init();
 hashtable_elem_t* search(hashtable_t* htbl, char word[STRING_SIZE]);
-int insert(hashtable_t* htbl, char word[STRING_SIZE]);
-int insert_preload(hashtable_t* htbl, char word[STRING_SIZE]);
+void insert(hashtable_t* htbl, char word[STRING_SIZE]);
+void insert_preload(hashtable_t* htbl, char word[STRING_SIZE]);
 void destroy_hashtable(hashtable_t* htbl);
 
 

@@ -30,7 +30,7 @@ hashtable_elem_t* search(hashtable_t* htbl, char word[STRING_SIZE]) {
     return list_search_asm_preload(&(htbl -> buckets[bucket_index].data), word);
 }
 
-int insert(hashtable_t* htbl, char word[STRING_SIZE]) {
+void insert(hashtable_t* htbl, char word[STRING_SIZE]) {
     assert(htbl);
     assert(word);
 
@@ -50,7 +50,7 @@ int insert(hashtable_t* htbl, char word[STRING_SIZE]) {
     lst_data_t* search_res_lst = list_search_asm(temp_lst, word);
     if (search_res_lst != NULL) {
         (search_res_lst -> counter)++;
-        return 1;
+        return;
     }
 
     hashtable_elem_t word_wrap = {.hash = hash};
@@ -59,10 +59,10 @@ int insert(hashtable_t* htbl, char word[STRING_SIZE]) {
     (temp_bucket -> size)++;
     list_push_back(temp_lst, word_wrap);
 
-    return 0;
+    return;
 }
 
-int insert_preload(hashtable_t* htbl, char word[STRING_SIZE]) {
+void insert_preload(hashtable_t* htbl, char word[STRING_SIZE]) {
     assert(htbl);
     assert(word);
 
@@ -82,7 +82,7 @@ int insert_preload(hashtable_t* htbl, char word[STRING_SIZE]) {
     lst_data_t* search_res_lst = list_search_asm_preload(temp_lst, word);
     if (search_res_lst != NULL) {
         (search_res_lst -> counter)++;
-        return 1;
+        return;
     }
 
     hashtable_elem_t word_wrap = {.hash = hash};
@@ -91,7 +91,7 @@ int insert_preload(hashtable_t* htbl, char word[STRING_SIZE]) {
     (temp_bucket -> size)++;
     list_push_back(temp_lst, word_wrap);
 
-    return 0;
+    return;
 }
 
 void destroy_hashtable(hashtable_t* htbl) {
