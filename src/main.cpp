@@ -29,18 +29,53 @@ int main() {
     char buffer[STRING_SIZE] = {};
 
 
-    uint64_t start = __rdtsc();
+    uint64_t start = 0;
+    uint64_t end   = 0;
     size_t counter = 0;
+    size_t time_counter = 0;
 
+    /*
     while (fgets(buffer, STRING_SIZE, input_fp)) {
+        if (strncmp(buffer, "you", sizeof("you")) == 0)
+            counter++;
+    }
+    printf("\"you\" counted %ld times\n\n", counter);
+    counter = 0;
+    */
+
+    /*strncpy(buffer, "you", sizeof("you"));
+    insert(&htbl, buffer);
+    insert(&htbl, buffer);
+    insert(&htbl, buffer);
+    insert(&htbl, buffer);
+    insert(&htbl, buffer);
+    */
+    while (fgets(buffer, STRING_SIZE, input_fp)) {
+        asm volatile ("rdtscp" : "=A" (start));
         insert(&htbl, buffer);
+        asm volatile ("rdtscp" : "=A" (end));
+        time_counter += end - start;
         counter++;
     }
 
-    uint64_t end = __rdtsc();
+    printf("--- insert test --- \n");
+    printf("ticks: %ld\n", time_counter);
+    printf("counter = %ld\n", counter);
 
-    printf("insert test\n");
-    printf("ticks: %ld\n", end - start);
+    fseek(input_fp, 0, SEEK_SET);
+
+    time_counter = 0;
+    counter      = 0;
+    while (fgets(buffer, STRING_SIZE, input_fp)) {
+        asm volatile ("rdtscp" : "=A" (start));
+        insert_preload(&htbl, buffer);
+        asm volatile ("rdtscp" : "=A" (end));
+        time_counter += end - start;
+        counter++;
+    }
+
+    printf("--- PRELOAD insert test --- \n");
+    printf("ticks: %ld\n", time_counter);
     printf("counter = %ld\n", counter);
 
     if (fclose(input_fp) != 0) { perror("input stream not closed"); }
@@ -82,6 +117,15 @@ int main() {
     if (fclose(input_fp)    != 0) { perror("input stream not closed"); }
 
     get_spectrum(&htbl);
+
+    strncpy(buffer, "you", sizeof("you"));
+    size_t word_len = strlen(buffer);
+    memset(buffer + word_len, 0, STRING_SIZE - word_len);
+
+    //size_t hash = crc32((uint8_t*)word, word_len);
+    size_t hash = MurmurHash64A(buffer, word_len, 0x1234ABCD);
+    size_t bucket_index = hash % BUCKETS_NUM;
+    list_dump(&(htbl.buckets[bucket_index].data), html_stream);
 
     destroy_hashtable(&htbl);
 

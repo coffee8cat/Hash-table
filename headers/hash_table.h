@@ -20,6 +20,7 @@ struct hashtable_t {
 hashtable_t init();
 hashtable_elem_t* search(hashtable_t* htbl, char word[STRING_SIZE]);
 int insert(hashtable_t* htbl, char word[STRING_SIZE]);
+int insert_preload(hashtable_t* htbl, char word[STRING_SIZE]);
 void destroy_hashtable(hashtable_t* htbl);
 
 

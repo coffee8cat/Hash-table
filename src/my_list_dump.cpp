@@ -63,27 +63,27 @@ int make_dot_file(list_t* lst, FILE* fp)
 
     int i = lst -> free;
     fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#163bf3\","
-                    "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
+                    "label=\"index: %d | data: %s | count: %ld | next: %d | prev: %d\"];\n",
+                    i, i, lst -> data[i].buffer,  lst -> data[i].counter, NEXT(i), PREV(i));
     i = NEXT(i);
     while (i != 0)
     {
         fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#39CCCC\","
-                    "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
+                    "label=\"index: %d | data: %s | count: %ld | next: %d | prev: %d\"];\n",
+                    i, i, lst -> data[i].buffer, lst -> data[i].counter, NEXT(i), PREV(i));
         i = NEXT(i);
     }
 
 
     fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#BE08F0\","
-                "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                0, 0, lst -> data[0].buffer, NEXT(0), PREV(0));
+                "label=\"index: %d | data: %s | count: %ld | next: %d | prev: %d\"];\n",
+                0, 0, lst -> data[0].buffer,  lst -> data[i].counter, NEXT(0), PREV(0));
     i = NEXT(0);
     while (i != 0)
     {
         fprintf(fp, "    node%d[shape=record,style=\"rounded,filled\",fillcolor=\"#2ECC40\","
-                    "label=\"index: %d | data: %s | next: %d | prev: %d\"];\n",
-                    i, i, lst -> data[i].buffer, NEXT(i), PREV(i));
+                    "label=\"index: %d | data: %s | count: %ld | next: %d | prev: %d\"];\n",
+                    i, i, lst -> data[i].buffer, lst -> data[i].counter, NEXT(i), PREV(i));
         i = NEXT(i);
     }
 

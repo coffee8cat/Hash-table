@@ -158,6 +158,7 @@ lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]) {
 
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
+        // next_elem = lst -> data[PREV(curr_elem)]
         if (my_str16cmp(temp_data.buffer, key)) {
         //if (strncmp(temp_data.buffer, key, 16) == 0) {
             return &(lst -> data[curr_elem]);
