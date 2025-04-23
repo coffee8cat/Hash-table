@@ -40,12 +40,12 @@ int list_dtor(list_t* lst)
 {
     assert(lst);
 
-    free(lst -> data);
-    free(lst -> next);
-    free(lst -> prev);
+    free(lst -> data); lst -> data = NULL;
+    free(lst -> next); lst -> next = NULL;
+    free(lst -> prev); lst -> prev = NULL;
 
-    memset(lst, 0, sizeof(list_t));
-    lst = NULL;
+    lst -> free = 0;
+    lst -> capacity = 0;
 
     return 0;
 }
@@ -152,6 +152,25 @@ int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem)
 }
 
 lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]) {
+    assert(lst);
+
+    lst_index_t curr_elem = PREV(0);
+
+    while(curr_elem != 0) {
+        lst_data_t temp_data = lst -> data[curr_elem];
+        // next_elem = lst -> data[PREV(curr_elem)]
+        //if (str16cmp(temp_data.buffer, key)) {
+        if (strncmp(temp_data.buffer, key, 16) == 0) {
+            return &(lst -> data[curr_elem]);
+        }
+        curr_elem = PREV(curr_elem);
+        // prefetch(); ???
+    }
+
+    return NULL;
+}
+
+lst_data_t* list_search_AVX(list_t* lst, char key[STRING_SIZE]) {
     assert(lst);
 
     lst_index_t curr_elem = PREV(0);

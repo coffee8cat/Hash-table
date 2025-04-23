@@ -5,6 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+extern const char* processed_text;
+extern const char* test_for_search;
+
 extern const char* fname_buckets_distr_data;
 extern const char* fname_size_distr_data;
 

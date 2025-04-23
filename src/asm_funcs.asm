@@ -1,5 +1,4 @@
 global list_search_asm
-global list_search_asm_prefetch
 global list_search_asm_preload
 section .text
 
@@ -142,58 +141,5 @@ list_search_asm_preload:
         ret
 
 
-
-list_search_asm_prefetch:
-        push    rbx
-
-        ; rdi is list_t* list
-        mov     r8,  qword [rdi + 16]         ; r8 = list->prev
-        movsx   rdx, dword [r8]               ; rdx = prev[0]
-        test    edx, edx
-        je      .return_null
-
-        mov     rdi, qword [rdi]              ; rdi = list->data
-        mov     rbx, rdx                      ; rbx = curr index
-        shl     rbx, 5                        ; sizeof(elem) = 32
-        add     rbx, rdi                      ; rbx = &list->data[rdx]
-        vmovdqu xmm0, [rbx]                   ; xmm0 = list.data[curr].buffer
-        vmovdqu xmm1, [rsi]                   ; xmm1 = string
-
-        jmp     .check_cond
-
-.while_body:
-        movsx   rdx, dword [r8 + rdx*4]       ; rdx = prev[curr]
-        test    edx, edx
-        je      .return_null
-
-        ; PREFETCH NEXT NODE
-        movsx   rcx, dword [r8 + rdx*4]       ; rcx = prev[next]
-        test    ecx, ecx
-        jz      .no_prefetch
-        mov     r9, rcx
-        shl     r9, 5
-        add     r9, rdi
-        prefetcht0 [r9]                       ; prefetch list.data[prev[next]]
-
-.no_prefetch:
-        mov     rbx, rdx                      ; rbx = list.data[curr]
-        shl     rbx, 5
-        add     rbx, rdi
-        vmovdqu xmm0, [rbx]
-
-.check_cond:
-        vpcmpeqb    xmm0, xmm0, xmm1
-        vpmovmskb   ecx, xmm0
-        cmp         ecx, 65535
-        jne         .while_body
-
-        mov     rax, rbx
-        pop     rbx
-        ret
-
-.return_null:
-        xor     eax, eax
-        pop     rbx
-        ret
 
 section .note.GNU-stack noalloc noexec nowrite progbits

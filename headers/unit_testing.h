@@ -8,10 +8,26 @@
 #include <assert.h>
 #include <cstdint>
 #include <x86intrin.h>
+#include <stdint.h>
+
+#include "hash_table.h"
+#include "params.h"
+
+static __inline__ uint64_t rdtsc(void) {
+    unsigned int lo, hi;
+    __asm__ __volatile__ (
+        "rdtsc"
+        : "=a" (lo), "=d" (hi)
+    );
+    return ((uint64_t)hi << 32) | lo;
+}
 
 typedef struct {
     InsertFunc* insert;
     SearchFunc* search;
 } Test_Hashtable_Funcs_Set;
+
+void run_tests(size_t NUM_OF_TESTS);
+bool check_word (hashtable_t* htbl, const char* word);
 
 #endif

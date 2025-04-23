@@ -1,10 +1,9 @@
 #include "unit_testing.h"
-#include "hash_table.h"
-#include "params.h"
 
 const Test_Hashtable_Funcs_Set Hashtable_Funcs_Set[] = {
-    {&insert, &insert_preload},
-    {}
+    {&insert, &search},
+    {&insert_AVX, &search_AVX},
+    {&insert_preload, &search_preload},
 };
 
 const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtable_Funcs_Set[0]);
@@ -12,95 +11,127 @@ const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtab
 const size_t benchmark_index = 0;
 const char dump_file_name[] = "run_results.txt";
 
-void run_tests(size_t n_tests) {
+void run_tests(size_t NUM_OF_TESTS) {
 
     FILE* fp_for_insert = fopen(processed_text, "r");
-    if (input_fp == NULL) { perror("Stream for insert test not opened"); }
+    if (fp_for_insert == NULL) { perror("Stream for insert test not opened"); }
     FILE* fp_for_search = fopen(test_for_search, "r");
-    if (input_fp == NULL) { perror("Stream for search test not opened"); }
+    if (fp_for_search == NULL) { perror("Stream for search test not opened"); }
 
     printf("Number of functions to test: %zu\n", NUM_OF_SETS_FOR_TEST);
 
-    uint64_t test_results[NUM_OF_SETS_FOR_TEST] = {};
+    uint64_t insert_test_results[NUM_OF_SETS_FOR_TEST] = {};
+    uint64_t search_test_results[NUM_OF_SETS_FOR_TEST] = {};
+
     uint64_t normilized_test_results[NUM_OF_SETS_FOR_TEST] = {};
     uint64_t temp_res = 0;
 
     uint64_t start = 0;
     uint64_t end   = 0;
-    size_t counter = 0;
-    size_t time_counter = 0;
 
-    hashtable_t htbl = init();
+    size_t insert_ticks_counter = 0;
+    size_t search_ticks_counter = 0;
 
-    for (size_t n = 0; n < NUM_OF_SETS_FOR_TEST; n++) {
+    hashtable_t htbl = {};
+    char buffer[STRING_SIZE] = {};
 
-        htbl.insert = Hashtable_Funcs_Set[n].insert;
-        htbl.search = Hashtable_Funcs_Set[n].search;
+    for (size_t func_num = 0; func_num < NUM_OF_SETS_FOR_TEST; func_num++) {
 
-        while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
-            asm volatile ("rdtscp" : "=A" (start));
-            htbl.insert(&htbl, buffer);
-            asm volatile ("rdtscp" : "=A" (end));
-            time_counter += end - start;
-            counter++;
+        htbl = init();
+        insert_ticks_counter = 0;
+        search_ticks_counter = 0;
+
+        htbl.insert = Hashtable_Funcs_Set[func_num].insert;
+        htbl.search = Hashtable_Funcs_Set[func_num].search;
+
+        for (size_t test_num = 0; test_num < NUM_OF_TESTS; test_num++) {
+            while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
+                _mm_lfence();
+                start = rdtsc();
+                htbl.insert(&htbl, buffer);
+                _mm_lfence();
+                end = rdtsc();
+                insert_ticks_counter += (end - start);
+            }
+
+            while (fgets(buffer, STRING_SIZE, fp_for_search)) {
+                _mm_lfence();
+                start = rdtsc();
+                htbl.search(&htbl, buffer);
+                _mm_lfence();
+                end = rdtsc();
+                search_ticks_counter += (end - start);
+            }
+
+            fseek(fp_for_insert, 0, SEEK_SET);
+            fseek(fp_for_search, 0, SEEK_SET);
         }
 
-        printf( "test number: %ld \n"
-                "insert:\n"
-                "ticks: %ld\n"
-                "counter = %ld\n", n, time_counter counter);
+        printf( "func number:  %ld\n"
+                "insert ticks: %ld\n"
+                "search ticks: %ld\n\n",
+                func_num, insert_ticks_counter, search_ticks_counter);
 
-        time_counter = 0;
-        counter = 0;
-        while (fgets(buffer, STRING_SIZE, fp_for_search)) {
-            asm volatile ("rdtscp" : "=A" (start));
-            htbl.search(&htbl, buffer);
-            asm volatile ("rdtscp" : "=A" (end));
-            time_counter += end - start;
-            counter++;
-        }
+        insert_test_results[func_num] = insert_ticks_counter;
+        search_test_results[func_num] = search_ticks_counter;
 
-        printf( "search:\n"
-                "ticks: %ld\n"
-                "counter = %ld\n", n, time_counter counter);
-
-        fseek(fp_for_insert, 0, SEEK_SET);
-        fseek(fp_for_search, 0, SEEK_SET);
+        destroy_hashtable(&htbl);
     }
+
+    double insert_benchmark_elem = static_cast<double>(insert_test_results[benchmark_index]);
+    double search_benchmark_elem = static_cast<double>(search_test_results[benchmark_index]);
 
     printf("-----Testing results-----\n");
     printf("Number of processor cycles per function:\n");
+    printf("            |             Insert         |            Search          |\n");
+    printf("Func Number | ticks          | benckmark | ticks          | benckmark |\n");
+
     for (size_t i = 0; i < NUM_OF_SETS_FOR_TEST; i++) {
-        printf("%zu: %lu\n", i, test_results[i]);
+        printf("%11zu | %14lu | %9lf | %14lu | %9lf |\n",
+                i, insert_test_results[i], search_test_results[i], insert_benchmark_elem / insert_test_results[i], search_benchmark_elem / search_test_results[i]);
     }
 
-    printf("Normilized values:\n");
-    double benchmark_elem = static_cast<double>(test_results[benchmark_index]);
-    for (size_t i = 0; i < NUM_OF_SETS_FOR_TEST; i++) {
-        printf("%zu: %lf\n", i, benchmark_elem / test_results[i]);
-    }
+    fclose(fp_for_insert);
+    fclose(fp_for_search);
 
-    file_dump(test_results);
+    //file_dump(test_results);
 }
 
-void file_dump(uint64_t* test_results) {
-    assert(test_results);
+bool check_word (hashtable_t* htbl, const char* word) {
+    assert(htbl);
+    assert(word);
 
-    char results_string[BUFSIZ] = "";
-    size_t written = uint64_array_to_string(results_string, BUFSIZ, test_results, NUM_OF_SETS_FOR_TEST);
+    FILE* fp = fopen(processed_text, "r");
+    if (fp == NULL) { perror("Stream for insert test not opened"); }
 
-    char file_name[64] = "";
-    snprintf(file_name, 64, "dump/%s", dump_file_name);
+    char temp_buf[STRING_SIZE] = {};
 
-    FILE* fp = fopen(file_name, "a+");
-    if (fp == NULL) {
-        fprintf(stderr, "Could not open file for writing %s in %s in %s:%d", dump_file_name, __func__, __FILE__, __LINE__);
-        return;
+    uint64_t text_counter = 0;
+    while (fgets(temp_buf, STRING_SIZE, fp)) {
+        if (strncmp(temp_buf, word, STRING_SIZE) == 0) {
+            text_counter++;
+        }
     }
 
-    fwrite(results_string, written, sizeof(char), fp);
+    fclose(fp);
 
-    if (not fclose(fp)) {
-        fprintf(stderr, "Could not close file after writing %s in %s in %s:%d", dump_file_name, __func__, __FILE__, __LINE__);
+    strncpy(temp_buf,  word, STRING_SIZE);
+
+    hashtable_elem_t* search_res = search(htbl, temp_buf);
+    if (search_res) {
+
+        printf( "\"%s\" count:\n"
+                "text:      %ld\n"
+                "hashtable: %ld\n",
+                word, text_counter, search_res -> counter);
     }
+    else {
+        fprintf(stderr, "Could not find \".....\" in hash table\n");
+        printf( "\"%s\" count:"
+                "text:      %ld\n", text_counter);
+
+        return false;
+    }
+
+    return text_counter == (search_res -> counter);
 }

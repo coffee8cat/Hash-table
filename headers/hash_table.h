@@ -6,13 +6,15 @@
 #include <cstdint>
 #include <x86intrin.h>
 
-typedef void              (InsertFunc)(hashtable_t*, char[STRING_SIZE]);
-typedef hashtable_elem_t* (SearchFunc)(hashtable_t*, char[STRING_SIZE]);
-
 struct bucket_t {
     list_t data;
     int32_t size;
 };
+
+typedef struct hashtable_t hashtable_t;
+
+typedef void              (InsertFunc)(hashtable_t*, char[STRING_SIZE]);
+typedef hashtable_elem_t* (SearchFunc)(hashtable_t*, char[STRING_SIZE]);
 
 struct hashtable_t {
     bucket_t* buckets;
@@ -21,13 +23,16 @@ struct hashtable_t {
     SearchFunc* search;
 };
 
-
 hashtable_t init();
-hashtable_elem_t* search(hashtable_t* htbl, char word[STRING_SIZE]);
-void insert(hashtable_t* htbl, char word[STRING_SIZE]);
-void insert_preload(hashtable_t* htbl, char word[STRING_SIZE]);
 void destroy_hashtable(hashtable_t* htbl);
 
+hashtable_elem_t* search        (hashtable_t* htbl, char word[STRING_SIZE]);
+hashtable_elem_t* search_AVX    (hashtable_t* htbl, char word[STRING_SIZE]);
+hashtable_elem_t* search_preload(hashtable_t* htbl, char word[STRING_SIZE]);
+
+void insert         (hashtable_t* htbl, char word[STRING_SIZE]);
+void insert_AVX     (hashtable_t* htbl, char word[STRING_SIZE]);
+void insert_preload (hashtable_t* htbl, char word[STRING_SIZE]);
 
 void init_crc32_table();
 uint32_t crc32(uint8_t *data, size_t length);

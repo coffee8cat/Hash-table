@@ -48,6 +48,8 @@ extern "C" lst_data_t* list_search_asm_preload(list_t* lst, char* key);
 extern "C" lst_data_t* list_search_asm_prefetch(list_t* lst, char* key);
 
 lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]);
+lst_data_t* list_search_AVX(list_t* lst, char key[STRING_SIZE]);
+
 int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem);
 int list_expand(list_t* lst);
 int list_erase(list_t* lst, lst_index_t i);

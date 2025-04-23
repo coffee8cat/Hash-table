@@ -1,5 +1,8 @@
 #include "params.h"
 
+const char* processed_text  = "text/War-and-Peace-processed.txt";
+const char* test_for_search = "text/War-and-Peace-test.txt";
+
 const char* fname_buckets_distr_data = "data/bucket_distribution.csv";
 const char* fname_size_distr_data    = "data/sizes_distribution.csv";
 
