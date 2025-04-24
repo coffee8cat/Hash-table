@@ -8,8 +8,8 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
     __asm__ volatile (
         "movdqu (%1),     %%xmm0 \n\t"    // xmm0 = word1
         "movdqu (%2),     %%xmm1 \n\t"    // xmm1 = word2
-        "pcmpeqb  %%xmm1, %%xmm0 \n\t"    // cmpeq: xmm0 == xmm1 → в xmm0
-        "pmovmskb %%xmm0, %0 \n\t"        // movemask → mask
+        "pcmpeqb  %%xmm1, %%xmm0 \n\t"    // xmm0 = cmpeq(xmm0, xmm1)
+        "pmovmskb %%xmm0, %0 \n\t"        // mask = movemask(xmm0)
         : "=r"(mask)                      // Exit
         : "r"(word1), "r"(word2)          // Entry
         : "xmm0", "xmm1"                  // Dstr
