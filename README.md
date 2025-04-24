@@ -78,7 +78,8 @@
 
 
 <details open>
-<summary>Код str16cmp на ассемблере</summary>
+<summary>Код str16cmp</summary>
+
 Код оптимизированной функции ([ссылка на исходник](src/my_optimized_funcs.cpp)):
 
 ```C
@@ -244,6 +245,8 @@ list_search_asm_preload:
 
 <details open>
 <summary>Код crc32_16</summary>
+
+[ссылка на исходник](src/hash_funcs.cpp)
 
 ```C
 uint32_t crc32_16(const char data[16]) {
