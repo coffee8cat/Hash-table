@@ -128,7 +128,7 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
 <details open>
 <summary>perf data</summary>
 
-![picture](img/perfdata_basic_ver.png)
+![picture](img/perfdata_AVX.png)
 
 </details>
 
