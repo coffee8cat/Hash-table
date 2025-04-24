@@ -1,9 +1,10 @@
 #include "unit_testing.h"
 
 const Test_Hashtable_Funcs_Set Hashtable_Funcs_Set[] = {
-    {&insert, &search},
-    {&insert_AVX, &search_AVX},
-    {&insert_preload, &search_preload},
+    {&insert,          &search},
+    {&insert_AVX,      &search_AVX},
+    {&insert_preload,  &search_preload},
+    {&insert_full_opt, &search_full_opt},
 };
 
 const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtable_Funcs_Set[0]);
@@ -18,7 +19,7 @@ void pin_to_core(int core_id) {
     sched_setaffinity(0, sizeof(set), &set);
 }
 
-void run_tests(size_t NUM_OF_TESTS) {
+void run_tests(size_t num_of_tests) {
 
     FILE* fp_for_insert = fopen(processed_text, "r");
     if (fp_for_insert == NULL) { perror("Stream for insert test not opened"); }
@@ -51,7 +52,7 @@ void run_tests(size_t NUM_OF_TESTS) {
         htbl.insert = Hashtable_Funcs_Set[func_num].insert;
         htbl.search = Hashtable_Funcs_Set[func_num].search;
 
-        for (size_t test_num = 0; test_num < NUM_OF_TESTS; test_num++) {
+        for (size_t test_num = 0; test_num < num_of_tests; test_num++) {
             while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
                 _mm_lfence();
                 start = rdtsc();

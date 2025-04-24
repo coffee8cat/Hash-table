@@ -30,7 +30,7 @@ typedef struct {
 } Test_Hashtable_Funcs_Set;
 
 void pin_to_core(int core_id);
-void run_tests(size_t NUM_OF_TESTS);
+void run_tests(size_t num_of_tests);
 bool check_word (hashtable_t* htbl, const char* word);
 
 #endif

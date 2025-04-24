@@ -16,12 +16,24 @@ void init_crc32_table() {
     }
 }
 
-uint32_t crc32(uint8_t* data, size_t length) {
+uint32_t crc32(char* data, size_t length) {
     uint32_t crc = 0xFFFFFFFF;
     for (size_t i = 0; i < length; i++) {
         uint8_t index = (crc ^ data[i]) & 0xFF;
         crc = (crc >> 8) ^ crc32_table[index];
     }
+    return crc ^ 0xFFFFFFFF;
+}
+
+uint32_t crc32_16(const char data[16]) {
+    uint32_t crc = 0xFFFFFFFF;
+
+    uint64_t part1 = *(const uint64_t*)(data);
+    crc = _mm_crc32_u64(crc, part1);
+
+    uint64_t part2 = *(const uint64_t*)(data + 8);
+    crc = _mm_crc32_u64(crc, part2);
+
     return crc ^ 0xFFFFFFFF;
 }
 

@@ -7,6 +7,7 @@ section .text
 ;        rsi: size_t key (hash to compare)
 ; Exit:  rbx: pointer to a list element with the hash == key or
 ;             NULL if not such element met
+; Dstr:  rax, rbx, rcx, rdx, rdi, r8,  xmm0, xmm1, xmm2
 ;=======================================================================================
 
 ;struct hashtable_elem_t {
@@ -117,7 +118,8 @@ list_search_asm_preload:
         mov     rbx, rdx                    ; rbx = list.data[curr]
         shl     rbx, 5
         add     rbx, rdi
-        vmovdqu xmm2, [rbx]                 ; xmm0 = list.data[curr].buffer
+                                            ; prefetch next node in xmm2
+        vmovdqu xmm2, [rbx]                 ; xmm2 = list.data[curr].buffer
 
 .check_cond:
         vpcmpeqb    xmm0, xmm0, xmm1        ; xmm0 = _mm_cmpeq_epi8(xmm0, xmm1)

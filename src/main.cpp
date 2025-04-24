@@ -9,14 +9,15 @@
 
 int main() {
     pin_to_core(0);
+    init_crc32_table();
 
     FILE* html_stream = prepare_to_dump();
-    if (html_stream == NULL) { perror("html stream not opened"); }
+    if (html_stream == NULL)   { perror("html stream not opened"); return -1; }
 
     hashtable_t htbl = init();
 
     FILE* fp_for_insert = fopen(processed_text, "r");
-    if (fp_for_insert == NULL) { perror("Stream of processed text not opened"); }
+    if (fp_for_insert == NULL) { perror("Stream of processed text not opened"); return -1; }
 
     char buffer[STRING_SIZE] = {};
 
@@ -27,13 +28,13 @@ int main() {
     if (fclose(fp_for_insert) != 0) { perror("input stream not closed"); }
 
     FILE* fp_for_search = fopen(test_for_search, "r");
-    if (fp_for_search == NULL) { perror("Stream of processed text not opened"); }
+    if (fp_for_search == NULL) { perror("Stream of processed text not opened"); return -1; }
 
     while (fgets(buffer, STRING_SIZE, fp_for_search)) {
         search_preload(&htbl, buffer);
     }
 
-    get_spectrum(&htbl);
+    //get_spectrum(&htbl);
     //check_word(&htbl, "you");
 
     destroy_hashtable(&htbl);
