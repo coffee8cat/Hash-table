@@ -11,6 +11,13 @@ const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtab
 const size_t benchmark_index = 0;
 const char dump_file_name[] = "run_results.txt";
 
+void pin_to_core(int core_id) {
+    cpu_set_t set;
+    CPU_ZERO(&set);
+    CPU_SET(core_id, &set);
+    sched_setaffinity(0, sizeof(set), &set);
+}
+
 void run_tests(size_t NUM_OF_TESTS) {
 
     FILE* fp_for_insert = fopen(processed_text, "r");

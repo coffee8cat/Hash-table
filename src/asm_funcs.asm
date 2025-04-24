@@ -32,8 +32,8 @@ list_search_asm:
         push rbx
 
         ; rdi is list_t* list
-        mov     r8, qword [rdi+16]         ; rcx = & (list -> prev)
-        movsx   rdx, dword [r8]            ; rdx = list -> prev[0]
+        mov     r8, qword [rdi+16]          ; rcx = & (list -> prev)
+        movsx   rdx, dword [r8]             ; rdx = list -> prev[0]
         test    edx, edx                    ; if (prev(0) == 0) { end } - means empty list
         je      .return_null
 
@@ -41,8 +41,8 @@ list_search_asm:
         mov     rbx, rdx                    ; rbx = list + rdx * sizeof(list_t) <=> rbx = list.data[rdx]
         shl     rbx, 5                      ; sizeof(list_t) = 32
         add     rbx, rdi
-        vmovdqu xmm0, [rbx]         ; xmm0 = list.data[curr].buffer
-        vmovdqu xmm1, [rsi]         ; xmm1 = string
+        vmovdqu xmm0, [rbx]                 ; xmm0 = list.data[curr].buffer
+        vmovdqu xmm1, [rsi]                 ; xmm1 = string
         jmp     .check_cond
 
 .while_body:

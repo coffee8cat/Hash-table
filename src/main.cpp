@@ -8,6 +8,7 @@
 #include <x86intrin.h>
 
 int main() {
+    pin_to_core(0);
 
     FILE* html_stream = prepare_to_dump();
     if (html_stream == NULL) { perror("html stream not opened"); }
@@ -33,7 +34,7 @@ int main() {
     }
 
     get_spectrum(&htbl);
-    check_word(&htbl, "you");
+    //check_word(&htbl, "you");
 
     destroy_hashtable(&htbl);
 

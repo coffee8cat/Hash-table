@@ -17,7 +17,6 @@ struct hashtable_elem_t {
 
 typedef hashtable_elem_t lst_data_t;
 typedef int32_t lst_index_t;
-typedef int (lst_cmp_func)(void*, void*);
 
 const lst_index_t realloc_coeff = 2;
 

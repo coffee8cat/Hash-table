@@ -9,6 +9,8 @@
 #include <cstdint>
 #include <x86intrin.h>
 #include <stdint.h>
+#include <sched.h>      // Для cpu_set_t, CPU_SET, CPU_ZERO, sched_setaffinity
+#include <unistd.h>
 
 #include "hash_table.h"
 #include "params.h"
@@ -27,6 +29,7 @@ typedef struct {
     SearchFunc* search;
 } Test_Hashtable_Funcs_Set;
 
+void pin_to_core(int core_id);
 void run_tests(size_t NUM_OF_TESTS);
 bool check_word (hashtable_t* htbl, const char* word);
 

@@ -18,6 +18,12 @@ clean_data:
 	rm data/*.png
 	rm data/*.dot
 
+profile:
+	perf record ./$(BUILD_DIR)/$(EXECUTABLE)
+
+hotspot:
+	hotspot perf.data
+
 compile:
 	nasm -f elf64 $(SOURCES_DIR)/asm_funcs.asm -o $(SOURCES_DIR)/asm_funcs.o
 	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -O2 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
