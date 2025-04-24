@@ -46,14 +46,14 @@
 <details open>
 <summary>Распределение по бакетам (размер)</summary>
 
-![picture](img\crc32_bucket_distribution.png)
+![picture](img/crc32_bucket_distribution.png)
 
 </details>
 
 <details open>
 <summary>Распределение по размеру бакета</summary>
 
-![picture](img\crc32_sizes_distribution.png)
+![picture](img/crc32_sizes_distribution.png)
 
 </details>
 
