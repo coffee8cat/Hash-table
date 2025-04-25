@@ -1,3 +1,6 @@
+<script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+<script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
 # Хэш-таблица
 - [Хэш-таблица](#хэш-таблица)
   - [Задача](#задача)
@@ -281,7 +284,7 @@ $$
 \frac{\text{ускорение}}{\text{кол-во строк на ассемблере}} \times 1000
 $$
 
-Получившееся значение было взято значение ускорения, равное (1.265 + 1.299) / 2 = 1.282, как среднее для insert и search:
+Получившееся значение было взято значение ускорения, равное (1.80 + 1.83) / 2 $\approx$ 1.81, как среднее для insert и search:
 $$
-\frac{1.282}{118} \times 1000 = 10.86
+\frac{1.81}{24} \times 1000 \approx 75
 $$
