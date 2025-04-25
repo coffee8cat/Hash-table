@@ -4,7 +4,7 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
     assert(word1);
     assert(word2);
 
-    int mask;
+    int mask = 0;
     __asm__ volatile (
         "movdqu (%1),     %%xmm0 \n\t"    // xmm0 = word1
         "movdqu (%2),     %%xmm1 \n\t"    // xmm1 = word2

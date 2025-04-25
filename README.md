@@ -123,18 +123,18 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
 ```
 </details>
 
-После оптимизации уменьшилось время работы strcmp относительно других функций, как и время работы функций, ее содержащих(например, list_search),
+Результаты оптимизации strncmp в сравнении с базовой версией (обе компилировались с -O3):
 
-<details open>
-<summary>perf data</summary>
-
-![picture](img/perfdata_AVX.png)
-
-</details>
+| str16cmp  | Insert ticks   | Insert bench | Search ticks   | Search bench |
+|-----------|----------------|--------------|----------------|--------------|
+| -         |     2074638899 |  1.00        |      416368305 |  1.00        |
+| +         |     1904905110 |  1.09        |      398713650 |  1.04        |
 
 ### Оптимизация list_search
 
-В данной оптимизации list_search была полностью переписана на ассемблер x86_64 (синтаксис *NASM*). Основное, что можно сделать для оптимизации поиска в списке - предзагрузка следующего элемента (*prefetching*), что и было сделано.
+Мы пропустили list_search и сначала взялись за strncmp, но list_search - самая нагруженная функция в программе. Оптимизируем её.
+
+В данной оптимизации list_search была полностью переписана на ассемблер x86_64 (синтаксис *NASM*). Как программисту, мне было известно, что список заполняется последовательно, поэтому вместо передвижения в списке по указателям, я сделал линейный проход в памяти по элементам списка, что избавило процессор от многих операций работы с памятью.
 
 <details open>
 <summary>Код list_search на ассемблере</summary>
@@ -165,82 +165,64 @@ struct list_t
 ```
 Непосредственно код ([ссылка на исходник](src/asm_funcs.asm)):
 ```asm
-list_search_asm_preload:
-        push rbx
+list_search_asm_opt:
 
-        ; rdi is list_t* list
-        mov     r8,  qword [rdi + 16]       ; rcx = & (list -> prev)
-        movsx   rdx, dword [r8]             ; rdx = list -> prev[0]
-        test    edx, edx                    ; if (prev(0) == 0) { end } - means empty list
-        je      .return_null
+        ; rdi = list_t* lst
+        ; rsi = char key[STRING_SIZE]
 
-        mov     rdi, qword [rdi]
-        mov     rbx, rdx                    ; rbx = list + rdx * sizeof(list_t) <=> rbx = list.data[rdx]
-        shl     rbx, 5                      ; sizeof(list_t) = 32
-        add     rbx, rdi
+        vmovdqu   xmm1, [rsi]             ; key for search
 
-        vmovdqu xmm0, [rbx]                 ; xmm0 = list.data[curr].buffer
-        vmovdqu xmm1, [rsi]                 ; xmm1 = string
+        mov     rcx, [rdi + 32]           ; rcx = list.free
+        mov     rax, [rdi]                ; rax = list.data
+        shl     rcx, 5                    ; rcx = rcx * sizeof(list.data[0])
+        add     rcx, rax                  ; rcx = list.data[list.free]
 
-        mov     rax, rbx
+.search_loop:
+        ; rax - curr_elem_ptr
+        ; rcx - last_elem_ptr
+        cmp     rax, rcx
+        ja     .return_null               ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
 
-        vpcmpeqb    xmm0, xmm0, xmm1        ; xmm0 = _mm_cmpeq_epi8(xmm0, xmm1)
-        vpmovmskb   ecx, xmm0               ; ecx  = _mm_movemask_epi8(xmm0)
-        cmp         ecx, 65535
-        je          .found
+        vmovdqu   xmm0, [rax]             ; curr_elem_ptr -> buffer
+        vpcmpeqb  xmm2, xmm0, xmm1
+        vpmovmskb edx, xmm2
 
-        movsx   rdx, dword [r8 + rdx*4]     ; rdx = prev(rdx)
-        test    edx, edx
-        je      .return_null                ; if (prev(curr) == 0) ==> it was last element to check => end
-        mov     rbx, rdx                    ; rbx = list.data[curr]
-        shl     rbx, 5
-        add     rbx, rdi
-                                            ; prefetch next node in xmm2
-        vmovdqu xmm2, [rbx]                 ; xmm2 = list.data[curr].buffer
+        cmp     edx, 0xFFFF
+        je      .return
 
-        ;jmp     .check_cond
-
-.while_body:
-        ; rdx = curr - index of current elem in list.data
-
-        vmovdqu xmm0, xmm2                  ; xmm0 = list.data[curr].buffer
-        mov     rax, rbx
-
-        movsx   rdx, dword [r8 + rdx*4]     ; rdx = prev(rdx)
-        test    edx, edx
-        je      .final_check                ; if (prev(curr) == 0) ==> it was last element to check => end
-        mov     rbx, rdx                    ; rbx = list.data[curr]
-        shl     rbx, 5
-        add     rbx, rdi
-        vmovdqu xmm2, [rbx]                 ; xmm0 = list.data[curr].buffer
-
-.check_cond:
-        vpcmpeqb    xmm0, xmm0, xmm1        ; xmm0 = _mm_cmpeq_epi8(xmm0, xmm1)
-        vpmovmskb   ecx, xmm0               ; ecx  = _mm_movemask_epi8(xmm0)
-        cmp         ecx, 65535
-        jne         .while_body
-
-.found:
-        pop rbx
-        ret                                 ; return list_data[curr]
-
-.final_check:
-        vpcmpeqb    xmm0, xmm0, xmm1        ; xmm0 = _mm_cmpeq_epi8(xmm0, xmm1)
-        vpmovmskb   ecx, xmm0               ; ecx  = _mm_movemask_epi8(xmm0)
-        cmp         ecx, 65535
-        je         .found
+        add     rax, 32                   ; ++curr_elem_ptr
+        jmp     .search_loop
 
 .return_null:
-        xor     eax, eax                    ; return false
-        pop rbx
+        xor     eax, eax
+
+.return:
         ret
 
 ```
 </details>
 
+Эффект от оптимизации (относительно базовой версии, скомпилированной с -O3):
+
+| str16cmp | asm list_search | Insert ticks   | Insert bench | Search ticks   | Search bench |
+|----------|-----------------|----------------|--------------|----------------|--------------|
+| +        | -               |     1904905110 |  1.09        |      398713650 |  1.04        |
+| +        | +               |     1330447440 |  1.56        |      257925030 |  1.61        |
+
 ### Оптимизация CRC32 через SSE
 
-В последней оптимизации все крайне тривиально: снова пользусь тем, что длина слова в тексте не превышает 16 байт, crc32 заменяется на версию crc32_16, которая вычислет хэш с помощью двух использований интринсиков _mm_crc32_u64, вычислющих хэш для 8 байт.
+Чтобы определить следующую цель, посмотрим профиль программы с уже осуществленными оптимизации:
+
+<details open>
+<summary>perf data</summary>
+
+![picture](img/perfdata_crc32.png)
+
+</details>
+
+Теперь на втором месте после переписанной на ассемблер list_search (обозначена ??? в окне hotspot) идет crc32.
+
+В последней оптимизации пользусь тем, что длина слова в тексте не превышает 16 байт, crc32 заменяем на версию crc32_16, которая вычислет хэш с помощью двух использований интринсиков _mm_crc32_u64, вычислющих хэш для 8 байт.
 
 
 <details open>
@@ -264,17 +246,33 @@ uint32_t crc32_16(const char data[16]) {
 
 </details>
 
+Эффект от оптимизации (относительно базовой версии, скомпилированной с -O3):
+
+| str16cmp | asm list_search | SIMD CRC32 | Insert ticks   | Insert bench | Search ticks   | Search bench |
+|----------|-----------------|------------|----------------|--------------|----------------|--------------|
+| +        | +               | -          |     1330447440 |  1.56        |      257925030 |  1.61        |
+| +        | +               | +          |     1151781450 |  1.80        |      227050830 |  1.83        |
+
 ## Тестирование оптимизаций
 
 Для подсчета производительности каждой версии сравнивалось время работы `100` циклов полного заполнения хэш-таблицы (версии insert) и поиска (версии search) через **rdtsc**. Для большей точности и воспроизводимости вычислений программа исполнялась на одном ядре (см. [pin_to_core](src/unit_testing.cpp)) в отсутвие других запущенных приложений (только VS Code).
 Исходники тестов: [run_tests](src/unit_testing.cpp)
 
-|   Version              | Insert ticks   | Insert bench | Search ticks   | Search bench |
-|------------------------|----------------|--------------|----------------|--------------|
-| Basic                         |    16123555018 |  1.000 |     3241929781 |  1.000 |
-| + str16cmp                    |    14382870750 |  1.121 |     2849467965 |  1.138 |
-| + preload in list search (asm)|    13047913233 |  1.236 |     2532656220 |  1.280 |
-| + SSE for crc32_16            |    12750709170 |  1.265 |     2496151515 |  1.299 |
+Увеличение скорости работы базовой версии при компиляции с -O3 вместо -O0:
+
+|Flags | Insert ticks   | Insert bench | Search ticks   | Search bench |
+|------|----------------|--------------|----------------|--------------|
+| -O0  |     2682216089 |  1.00        |      526570710 |  1.00        |
+| -O3  |     2074638899 |  1.30        |      416368305 |  1.26        |
+
+Увеличение скорости работы программы по сравнению с базовой версией, скомпилированной с -O3:
+
+| str16cmp | asm list_search | SIMD CRC32 | Insert ticks   | Insert bench | Search ticks   | Search bench |
+|----------|-----------------|------------|----------------|--------------|----------------|--------------|
+| -        | -               | -          |     2074638899 |  1.00        |      416368305 |  1.00        |
+| +        | -               | -          |     1904905110 |  1.09        |      398713650 |  1.04        |
+| +        | +               | -          |     1330447440 |  1.56        |      257925030 |  1.61        |
+| +        | +               | +          |     1151781450 |  1.80        |      227050830 |  1.83        |
 
 Последняя оптимизация с CRC32 дала прирост меньше 3% производительности по сравнению с начальной версией. В данной работе это сигнал для завершения проведения оптимизаций.
 

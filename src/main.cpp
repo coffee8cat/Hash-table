@@ -22,7 +22,7 @@ int main() {
     char buffer[STRING_SIZE] = {};
 
     while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
-        insert_preload(&htbl, buffer);
+        insert(&htbl, buffer);
     }
 
     if (fclose(fp_for_insert) != 0) { perror("input stream not closed"); }
@@ -31,18 +31,18 @@ int main() {
     if (fp_for_search == NULL) { perror("Stream of processed text not opened"); return -1; }
 
     while (fgets(buffer, STRING_SIZE, fp_for_search)) {
-        search_preload(&htbl, buffer);
+        search(&htbl, buffer);
     }
 
     //get_spectrum(&htbl);
-    //check_word(&htbl, "you");
+    check_word(&htbl, "you", html_stream);
 
     destroy_hashtable(&htbl);
 
     if (fclose(fp_for_search) != 0) { perror("input stream not closed"); }
     if (fclose(html_stream)   != 0) { perror("html stream not closed");  }
 
-    //run_tests(100);
+    //run_tests(10);
 
     return 0;
 }

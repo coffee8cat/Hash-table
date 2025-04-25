@@ -30,6 +30,8 @@ struct list_t
     lst_index_t capacity;
 };
 
+typedef lst_data_t* (ListSearchFunc)(list_t* lst, char* key);
+
 // LIST FUNCTIONS -----------------------------------------------------------------------------------------------------------------------------
 list_t list_ctor();
 int list_dtor(list_t* lst);
@@ -44,9 +46,10 @@ int list_push_back (list_t* lst, lst_data_t elem);
 
 extern "C" lst_data_t* list_search_asm(list_t* lst, char* key);
 extern "C" lst_data_t* list_search_asm_preload(list_t* lst, char* key);
-extern "C" lst_data_t* list_search_asm_prefetch(list_t* lst, char* key);
+extern "C" lst_data_t* list_search_asm_opt(list_t* lst, char* key);
 
 lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]);
+lst_data_t* list_search_opt(list_t* lst, char key[STRING_SIZE]);
 lst_data_t* list_search_AVX(list_t* lst, char key[STRING_SIZE]);
 
 int list_insert_after(list_t* lst, lst_index_t i, lst_data_t elem);

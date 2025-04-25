@@ -26,7 +26,7 @@ hotspot:
 
 compile:
 	nasm -f elf64 $(SOURCES_DIR)/asm_funcs.asm -o $(SOURCES_DIR)/asm_funcs.o
-	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -O2 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
+	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -g -O3 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
 
 
 run:

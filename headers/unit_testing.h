@@ -25,12 +25,14 @@ static __inline__ uint64_t rdtsc(void) {
 }
 
 typedef struct {
-    InsertFunc* insert;
-    SearchFunc* search;
+    InsertFunc*     insert;
+    SearchFunc*     search;
+    ListSearchFunc* list_search;
+    HashFunc*       hash_func;
 } Test_Hashtable_Funcs_Set;
 
 void pin_to_core(int core_id);
 void run_tests(size_t num_of_tests);
-bool check_word (hashtable_t* htbl, const char* word);
+bool check_word (hashtable_t* htbl, const char* word, FILE* html_stream);
 
 #endif

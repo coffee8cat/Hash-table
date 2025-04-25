@@ -158,13 +158,11 @@ lst_data_t* list_search(list_t* lst, char key[STRING_SIZE]) {
 
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
-        // next_elem = lst -> data[PREV(curr_elem)]
-        //if (str16cmp(temp_data.buffer, key)) {
-        if (strncmp(temp_data.buffer, key, 16) == 0) {
+
+        if (strncmp(temp_data.buffer, key, STRING_SIZE) == 0) {
             return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);
-        // prefetch(); ???
     }
 
     return NULL;
@@ -177,15 +175,29 @@ lst_data_t* list_search_AVX(list_t* lst, char key[STRING_SIZE]) {
 
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
-        // next_elem = lst -> data[PREV(curr_elem)]
         if (my_str16cmp(temp_data.buffer, key)) {
-        //if (strncmp(temp_data.buffer, key, 16) == 0) {
             return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);
-        // prefetch(); ???
     }
 
+    return NULL;
+}
+
+lst_data_t* list_search_opt(list_t* lst, char key[STRING_SIZE]) {
+    assert(lst);
+
+    lst_data_t* curr_elem_ptr = lst -> data;
+    lst_data_t* free_elem_ptr = curr_elem_ptr + lst -> free;
+
+    while(curr_elem_ptr < free_elem_ptr) {
+        lst_data_t temp_data = *curr_elem_ptr;
+
+        if (my_str16cmp(temp_data.buffer, key)) {
+            return curr_elem_ptr;
+        }
+        ++curr_elem_ptr;
+    }
     return NULL;
 }
 

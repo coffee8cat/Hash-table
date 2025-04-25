@@ -1,10 +1,10 @@
 #include "unit_testing.h"
 
 const Test_Hashtable_Funcs_Set Hashtable_Funcs_Set[] = {
-    {&insert,          &search},
-    {&insert_AVX,      &search_AVX},
-    {&insert_preload,  &search_preload},
-    {&insert_full_opt, &search_full_opt},
+    {&insert, &search, &list_search,         &crc32},
+    {&insert, &search, &list_search_AVX,     &crc32},
+    {&insert, &search, &list_search_asm_opt, &crc32},
+    {&insert, &search, &list_search_asm_opt, &crc32_16},
 };
 
 const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtable_Funcs_Set[0]);
@@ -49,8 +49,10 @@ void run_tests(size_t num_of_tests) {
         insert_ticks_counter = 0;
         search_ticks_counter = 0;
 
-        htbl.insert = Hashtable_Funcs_Set[func_num].insert;
-        htbl.search = Hashtable_Funcs_Set[func_num].search;
+        htbl.insert      = Hashtable_Funcs_Set[func_num].insert;
+        htbl.search      = Hashtable_Funcs_Set[func_num].search;
+        htbl.list_search = Hashtable_Funcs_Set[func_num].list_search;
+        htbl.hash_func   = Hashtable_Funcs_Set[func_num].hash_func;
 
         for (size_t test_num = 0; test_num < num_of_tests; test_num++) {
             while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
@@ -105,7 +107,7 @@ void run_tests(size_t num_of_tests) {
     //file_dump(test_results);
 }
 
-bool check_word (hashtable_t* htbl, const char* word) {
+bool check_word (hashtable_t* htbl, const char* word, FILE* html_stream) {
     assert(htbl);
     assert(word);
 
@@ -126,7 +128,20 @@ bool check_word (hashtable_t* htbl, const char* word) {
     strncpy(temp_buf,  word, STRING_SIZE);
 
     hashtable_elem_t* search_res = search(htbl, temp_buf);
+
+
     if (search_res) {
+
+        char buffer[STRING_SIZE] = {};
+        strncpy(buffer, word, STRING_SIZE);
+
+        size_t word_len = strlen(buffer);
+        memset(buffer + word_len, 0, STRING_SIZE - word_len);
+
+        size_t hash = crc32_16(buffer);
+        size_t bucket_index = hash % BUCKETS_NUM;
+
+        list_dump(&(htbl -> buckets[bucket_index].data), html_stream);
 
         printf( "\"%s\" count:\n"
                 "text:      %ld\n"
