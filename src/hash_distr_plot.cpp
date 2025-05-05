@@ -74,7 +74,7 @@ void save_distr_plot_descr(uint16_t* buckets_sizes, size_t* bucket_size_counters
     if (sizes_fp) {
         fprintf(fp, "Size,Count\n");
         for (int i = 0; i < size_distr_analysis_width; i++) {
-            fprintf(fp, "%d,%d\n", i, bucket_size_counters[i]);
+            fprintf(fp, "%d,%ld\n", i, bucket_size_counters[i]);
         }
 
         fclose(fp);

@@ -19,6 +19,15 @@ void pin_to_core(int core_id) {
     sched_setaffinity(0, sizeof(set), &set);
 }
 
+// increases counter by ticks of operation execution:
+#define RDTSC_MEASURE(operation, counter)                   \
+    _mm_lfence();                                           \
+    start = rdtsc();                                        \
+    operation;                                              \
+    _mm_lfence();                                           \
+    end = rdtsc();                                          \
+    counter += (end - start)                                // needs ';' after using define
+
 void run_tests(size_t num_of_tests) {
 
     FILE* fp_for_insert = fopen(processed_text, "r");
@@ -56,21 +65,11 @@ void run_tests(size_t num_of_tests) {
 
         for (size_t test_num = 0; test_num < num_of_tests; test_num++) {
             while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
-                _mm_lfence();
-                start = rdtsc();
-                htbl.insert(&htbl, buffer);
-                _mm_lfence();
-                end = rdtsc();
-                insert_ticks_counter += (end - start);
+                RDTSC_MEASURE(htbl.insert(&htbl, buffer), insert_ticks_counter);
             }
 
             while (fgets(buffer, STRING_SIZE, fp_for_search)) {
-                _mm_lfence();
-                start = rdtsc();
-                htbl.search(&htbl, buffer);
-                _mm_lfence();
-                end = rdtsc();
-                search_ticks_counter += (end - start);
+                RDTSC_MEASURE(htbl.search(&htbl, buffer), search_ticks_counter);
             }
 
             fseek(fp_for_insert, 0, SEEK_SET);
@@ -98,14 +97,20 @@ void run_tests(size_t num_of_tests) {
 
     for (size_t i = 0; i < NUM_OF_SETS_FOR_TEST; i++) {
         printf("%11zu | %14lu | %9lf | %14lu | %9lf |\n",
-                i, insert_test_results[i], search_test_results[i], insert_benchmark_elem / insert_test_results[i], search_benchmark_elem / search_test_results[i]);
+                i,
+                insert_test_results[i],
+                insert_benchmark_elem / insert_test_results[i],
+                search_test_results[i],
+                search_benchmark_elem / search_test_results[i]);
     }
 
-    fclose(fp_for_insert);
-    fclose(fp_for_search);
+    if (fclose(fp_for_insert) != 0) { perror("Could not close file for insert test"); }
+    if (fclose(fp_for_search) != 0) { perror("Could not close file for search test"); }
 
     //file_dump(test_results);
 }
+
+#undef RDTSC_MEASURE
 
 bool check_word (hashtable_t* htbl, const char* word, FILE* html_stream) {
     assert(htbl);
@@ -151,7 +156,7 @@ bool check_word (hashtable_t* htbl, const char* word, FILE* html_stream) {
     else {
         fprintf(stderr, "Could not find \".....\" in hash table\n");
         printf( "\"%s\" count:"
-                "text:      %ld\n", text_counter);
+                "text:      %ld\n", word, text_counter);
 
         return false;
     }

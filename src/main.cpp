@@ -42,7 +42,7 @@ int main() {
     if (fclose(fp_for_search) != 0) { perror("input stream not closed"); }
     if (fclose(html_stream)   != 0) { perror("html stream not closed");  }
 
-    //run_tests(10);
+    run_tests(10);
 
     return 0;
 }
