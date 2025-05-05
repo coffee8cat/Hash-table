@@ -34,7 +34,7 @@ int main() {
         search(&htbl, buffer);
     }
 
-    //get_spectrum(&htbl);
+    get_spectrum(&htbl);
     check_word(&htbl, "you", html_stream);
 
     destroy_hashtable(&htbl);

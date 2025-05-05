@@ -9,6 +9,7 @@ set grid
 set boxwidth 0.8 relative
 set style fill solid
 
+set xrange [0:2000]
 plot 'data/bucket_distribution.csv' using 1:2 skip 1 with boxes lc rgb "#406090" notitle
 
 
@@ -23,4 +24,5 @@ set grid
 set boxwidth 0.8 relative
 set style fill solid
 
+set xrange [0:*]
 plot 'data/sizes_distribution.csv' using 1:2 skip 1 with boxes lc rgb "#406090" notitle

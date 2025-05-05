@@ -96,6 +96,7 @@ void save_distr_plot_descr(uint16_t* buckets_sizes, size_t* bucket_size_counters
                 "set grid\n"
                 "set boxwidth 0.8 relative\n"
                 "set style fill solid\n\n"
+                "set xrange [0:*]\n"
                 "plot \'data/bucket_distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n\n\n"
 
                 "set datafile separator comma\n"
@@ -107,6 +108,7 @@ void save_distr_plot_descr(uint16_t* buckets_sizes, size_t* bucket_size_counters
                 "set grid\n"
                 "set boxwidth 0.8 relative\n"
                 "set style fill solid\n\n"
+                "set xrange [0:*]\n"
                 "plot \'data/sizes_distribution.csv\' using 1:2 skip 1 with boxes lc rgb \"#406090\" notitle\n",
                 fname_buckets_distr_plot, fname_size_distr_plot);
 
