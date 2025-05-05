@@ -34,7 +34,7 @@ list_search_asm:
         push rbx
 
         ; rdi is list_t* list
-        mov     r8, qword [rdi+16]          ; rcx = & (list -> prev)
+        mov     r8,  qword [rdi+16]         ; rcx = & (list -> prev)
         movsx   rdx, dword [r8]             ; rdx = list -> prev[0]
 
         test    edx, edx                    ; if (prev(0) == 0) { end } - means empty list
