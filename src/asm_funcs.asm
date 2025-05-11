@@ -14,7 +14,7 @@ section .text
 ;=======================================================================================
 
 ;struct hashtable_elem_t {
-;    char   buffer[16];
+;    char   buffer[32];
 ;    size_t hash;
 ;    size_t counter;
 ;};
@@ -31,50 +31,6 @@ section .text
 ;    lst_index_t free;
 ;    lst_index_t capacity;
 ;};
-
-list_search_asm_str16cmp:
-        push rbx
-
-        ; rdi is list_t* list
-        mov     r8,  qword [rdi+16]         ; rcx = & (list -> prev)
-        movsx   rdx, dword [r8]             ; rdx = list -> prev[0]
-
-        test    edx, edx                    ; if (prev(0) == 0) { end } - means empty list
-        je      .return_null
-
-        mov     rdi, qword [rdi]
-        mov     rbx, rdx                    ; rbx = list + rdx * sizeof(list_t) <=> rbx = list.data[rdx]
-        shl     rbx, 5                      ; sizeof(list_t) = 32
-        add     rbx, rdi
-        vmovdqu xmm0, [rbx]                 ; xmm0 = list.data[curr].buffer
-        vmovdqu xmm1, [rsi]                 ; xmm1 = string
-        jmp     .check_cond
-
-.while_body:
-        ; rdx = curr - index of current elem in list.data
-        movsx   rdx, dword [r8 + rdx*4]      ; rdx = prev(rdx)
-        test    edx, edx
-        je      .return_null                ; if (prev(curr) == 0) ==> it was last element to check => end
-        mov     rbx, rdx                    ; rbx = list.data[curr]
-        shl     rbx, 5
-        add     rbx, rdi
-        vmovdqu xmm0, [rbx]                 ; xmm0 = list.data[curr].buffer
-
-.check_cond:
-        vpcmpeqb    xmm3, xmm0, xmm1        ; xmm0 = _mm_cmpeq_epi8(xmm0, xmm1)
-        vpmovmskb   ecx, xmm3               ; ecx  = _mm_movemask_epi8(xmm0)
-        cmp         ecx, 65535
-        jne         .while_body
-
-        mov     rax, rbx
-        pop rbx
-        ret                                 ; return list_data[curr]
-
-.return_null:
-        xor     eax, eax                    ; return false
-        pop rbx
-        ret
-
 
 list_search_asm:
 ;----------------------------------------------------------------------------------------------------------
@@ -103,7 +59,7 @@ list_search_asm:
         test    eax, eax                 ; check match
         je      .return_found
 
-        add     rbx, 32                  ; ++curr_elem_ptr
+        add     rbx, 64                  ; ++curr_elem_ptr
         jmp     .search_loop
 
 .return_found:
@@ -120,13 +76,14 @@ list_search_asm:
 
 
 list_search_asm_opt:
-        pxor xmm0, xmm0
-        pxor xmm1, xmm1
-        pxor xmm2, xmm2
+        vpxor ymm0, ymm0, ymm0
+        vpxor ymm1, ymm1, ymm1
+        vpxor ymm2, ymm2, ymm2
+
         ; rdi = list_t* lst
         ; rsi = char key[STRING_SIZE]
 
-        vmovdqu   xmm1, [rsi]             ; key for search
+        vmovdqu   ymm1, [rsi]             ; key for search
 
         mov     rcx, [rdi + 32]           ; rcx = list.free
         mov     rax, [rdi]                ; rax = list.data
@@ -139,23 +96,22 @@ list_search_asm_opt:
         cmp     rax, rcx
         ja     .return_null                ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
 
-        vmovdqa   xmm0, [rax]              ; curr_elem_ptr -> buffer
-        vpcmpeqb  xmm2, xmm0, xmm1
-        vpmovmskb edx, xmm2
+        vmovdqa   ymm0, [rax]              ; curr_elem_ptr -> buffer
+        vpcmpeqb  ymm2, ymm0, ymm1
+        vpmovmskb edx, ymm2
 
-        cmp     edx, 0xFFFF
+        cmp     edx, 0xFFFFFFFF
         je      .return
 
-        add     rax, 32                    ; ++curr_elem_ptr
+        add     rax, 64                    ; ++curr_elem_ptr
         jmp     .search_loop
 
 .return_null:
         xor     eax, eax
+        vzeroupper
 
 .return:
         ret
-
-
 
 list_search_asm_preload:
 
@@ -175,14 +131,14 @@ list_search_asm_preload:
         cmp     rax, rcx
         ja     .return_null              ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
 
-        vmovdqa   xmm0, [rax]              ; curr_elem_ptr -> buffer
-        vpcmpeqb  xmm2, xmm0, xmm1
-        vpmovmskb edx, xmm2
+        vmovdqa   ymm0, [rax]              ; str32cmp
+        vpcmpeqb  ymm2, ymm0, ymm1         ;
+        vpmovmskb edx, ymm2
 
         cmp     edx, 0xFFFF
         je      .return
 
-        add     rax, 32                  ; ++curr_elem_ptr
+        add     rax, 48                  ; ++curr_elem_ptr
         jmp     .search_loop
 
 .return_null:

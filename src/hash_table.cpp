@@ -14,7 +14,7 @@ hashtable_t init() {
 
     htbl.insert      = &insert;
     htbl.search      = &search;
-    htbl.list_search = &list_search_asm_opt;
+    htbl.list_search = &list_search;
     htbl.hash_func   = &crc32;
 
     return htbl;

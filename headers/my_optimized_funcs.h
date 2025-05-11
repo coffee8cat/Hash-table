@@ -7,7 +7,7 @@
 
 #include "params.h"
 
-bool my_str16cmp(char word1[16], char word2[16]);
+bool my_str32cmp(char word1[16], char word2[16]);
 //bool my_str32cmp(char word1[32], char word2[32]);
 
 #endif

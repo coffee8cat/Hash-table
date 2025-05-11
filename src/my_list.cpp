@@ -1,7 +1,7 @@
 #include "my_list.h"
 #include "my_optimized_funcs.h"
 
-const lst_index_t lst_default_capacity = 20;
+const lst_index_t lst_default_capacity = 32;
 
 
 #define NEXT(i) lst -> next[i]
@@ -12,7 +12,7 @@ list_t list_ctor()
     list_t lst = {};
 
     lst.capacity = lst_default_capacity;
-    lst.data = (lst_data_t*) calloc(lst.capacity, sizeof(lst_data_t));
+    lst.data = (lst_data_t*) aligned_alloc(32, lst.capacity * sizeof(lst_data_t));
     lst.next = (lst_index_t*)calloc(lst.capacity, sizeof(lst_index_t));
     lst.prev = (lst_index_t*)calloc(lst.capacity, sizeof(lst_index_t));
 
@@ -175,7 +175,7 @@ lst_data_t* list_search_AVX(list_t* lst, char key[STRING_SIZE]) {
 
     while(curr_elem != 0) {
         lst_data_t temp_data = lst -> data[curr_elem];
-        if (my_str16cmp(temp_data.buffer, key)) {
+        if (my_str32cmp(temp_data.buffer, key)) {
             return &(lst -> data[curr_elem]);
         }
         curr_elem = PREV(curr_elem);
@@ -193,7 +193,7 @@ lst_data_t* list_search_opt(list_t* lst, char key[STRING_SIZE]) {
     while(curr_elem_ptr < free_elem_ptr) {
         lst_data_t temp_data = *curr_elem_ptr;
 
-        if (my_str16cmp(temp_data.buffer, key)) {
+        if (my_str32cmp(temp_data.buffer, key)) {
             return curr_elem_ptr;
         }
         ++curr_elem_ptr;

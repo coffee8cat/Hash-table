@@ -50,7 +50,7 @@ void run_tests(size_t num_of_tests) {
     size_t search_ticks_counter = 0;
 
     hashtable_t htbl = {};
-    char buffer[STRING_SIZE] = {};
+    alignas(32) char buffer[STRING_SIZE] = {};
 
 
     htbl = init();

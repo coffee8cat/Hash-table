@@ -16,12 +16,10 @@ int main() {
 
     hashtable_t htbl = init();
 
-    htbl.list_search = &list_search_asm_opt;
-
     FILE* fp_for_insert = fopen(processed_text, "r");
     if (fp_for_insert == NULL) { perror("Stream of processed text not opened"); return -1; }
 
-    char buffer[STRING_SIZE] = {};
+    alignas(32) char buffer[STRING_SIZE] = {};
 
     while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
         insert(&htbl, buffer);

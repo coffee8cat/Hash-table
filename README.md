@@ -125,7 +125,6 @@ struct list_t
 ```asm
 
 list_search_asm:
-
         ; rdi = list_t* lst
         ; rsi = char key[STRING_SIZE] (STRING_SIZE=16)
         push    r12                      ; save callee-saved regs
@@ -151,7 +150,7 @@ list_search_asm:
         test    eax, eax                 ; check match
         je      .return_found
 
-        add     rbx, 32                  ; ++curr_elem_ptr
+        add     rbx, 64                  ; ++curr_elem_ptr (sizeof(lst_data_t) is 64 bytes)
         jmp     .search_loop
 
 .return_found:
@@ -165,6 +164,7 @@ list_search_asm:
         pop     rbx                      ; restore callee-saved regs
         pop     r12
         ret
+
 ```
 </details>
 
@@ -173,8 +173,8 @@ list_search_asm:
 
 | asm list_search | rdtsc тики      | Ускорение относительно версии без оптимизаций, скомпилированной с -O3 |
 |-----------------|-----------------|--------------|
-| -               |      4061942822 |  1.00        |
-| +               |      2789726520 |  1.46        |
+| -               |      5197108350 |  1.00        |
+| +               |      2891587320 |  1.80        |
 
 ### Оптимизация strncmp
 
@@ -191,19 +191,19 @@ list_search_asm:
 Код оптимизированной функции ([ссылка на исходник](src/my_optimized_funcs.cpp)):
 
 ```C
-bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
+bool my_str32cmp(char word1[32], char word2[32]) {
     assert(word1);
     assert(word2);
 
-    int mask;
+    int mask = 0;
     __asm__ volatile (
-        "movdqu (%1),     %%xmm0 \n\t"    // xmm0 = word1
-        "movdqu (%2),     %%xmm1 \n\t"    // xmm1 = word2
-        "pcmpeqb  %%xmm1, %%xmm0 \n\t"    // xmm0 = cmpeq(xmm0, xmm1)
-        "pmovmskb %%xmm0, %0 \n\t"        // mask = movemask(xmm0)
-        : "=r"(mask)                      // Exit
-        : "r"(word1), "r"(word2)          // Entry
-        : "xmm0", "xmm1"                  // Dstr
+        "vmovdqa (%1),     %%ymm0 \n\t"             // ymm0 = word1
+        "vmovdqa (%2),     %%ymm1 \n\t"             // ymm1 = word2
+        "vpcmpeqb  %%ymm1, %%ymm0, %%ymm0\n\t"      // ymm0 = cmpeq(ymm0, ymm1)
+        "vpmovmskb %%ymm0, %0 \n\t"                 // mask = movemask(ymm0)
+        : "=r"(mask)                                // Exit
+        : "r"(word1), "r"(word2)                    // Entry
+        : "ymm0", "ymm1"                            // Dstr
     );
 
     return mask == 0xFFFF;
@@ -215,16 +215,16 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
 
 ```C
 
-bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
+bool my_str32cmp(char word1[32], char word2[32]) {
     assert(word1);
     assert(word2);
 
-    __m128i word1_xmm = _mm_loadu_si128((__m128i*)word1);
-    __m128i word2_xmm = _mm_loadu_si128((__m128i*)word2);
+    __m256i word1_ymm = _mm256_load_si256((__m256i*)word1);
+    __m256i word2_ymm = _mm256_load_si256((__m256i*)word2);
 
-    __m128i cmp = _mm_cmpeq_epi8(word1_xmm, word2_xmm);
+    __m256i cmp = _mm256_cmpeq_epi8(word1_ymm, word2_ymm);
 
-    int mask = _mm_movemask_epi8(cmp);
+    int mask = _mm256_movemask_epi8(cmp);
 
     return mask == 0xFFFF;
 }
@@ -235,8 +235,8 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
 
 | asm list_search | str16cmp | rdtsc тики      | Ускорение относительно версии без оптимизаций, скомпилированной с -O3 |
 |-----------------|----------|-----------------|--------------|
-| +               | -        |      2789726520 |  1.46        |
-| +               | +        |      2353959840 |  1.72        |
+| +               | -        |      2891587320 |  1.80        |
+| +               | +        |      2497043070 |  2.08        |
 
 
 ### Оптимизация CRC32 через SSE
@@ -250,9 +250,9 @@ bool my_str16cmp(char word1[STRING_SIZE], char word2[STRING_SIZE]) {
 
 </details>
 
-Теперь на втором месте после переписанной на ассемблер list_search (обозначена ??? в окне hotspot) идет crc32.
+Теперь на втором месте после переписанной на ассемблер list_search (обозначена ??? в окне hotspot) идет crc32 (оптимизированная strncmp теперь заинлайнена вручную в list_search).
 
-В последней оптимизации пользусь тем, что длина слова в тексте не превышает 16 байт, crc32 заменяем на версию crc32_16, которая вычислет хэш с помощью двух использований интринсиков _mm_crc32_u64, вычисляющих хэш для 8 байт.
+В последней оптимизации пользуясь тем, что длина слова в тексте не превышает 16 байт, crc32 заменяем на версию crc32_16, которая вычислет хэш с помощью двух использований интринсиков _mm_crc32_u64, вычисляющих хэш для 8 байт.
 
 
 <details open>
@@ -280,8 +280,8 @@ uint32_t crc32_16(const char data[16]) {
 
 | asm list_search | str16cmp | SIMD CRC32 | rdtsc тики      | Ускорение относительно версии без оптимизаций, скомпилированной с -O3 |
 |-----------------|----------|------------|-----------------|--------------|
-| +               | +        | -          |      2353959840 |  1.72        |
-| +               | +        | +          |      2030421300 |  2.00        |
+| +               | +        | -          |      2497043070 |  2.08        |
+| +               | +        | +          |      2221201019 |  2.34        |
 
 ## Финальное сравнение
 
@@ -296,10 +296,10 @@ uint32_t crc32_16(const char data[16]) {
 
 | asm list_search | str16cmp | SIMD CRC32 | rdtsc тики      | Ускорение относительно версии без оптимизаций, скомпилированной с -O3 |
 |-----------------|----------|------------|-----------------|--------------|
-| -               | -        | -          |      4061942822 |  1.00        |
-| +               | -        | -          |      2789726520 |  1.46        |
-| +               | +        | -          |      2353959840 |  1.72        |
-| +               | +        | +          |      2030421300 |  2.00        |
+| -               | -        | -          |      5197108350 |  1.00        |
+| +               | -        | -          |      2891587320 |  1.80        |
+| +               | +        | -          |      2497043070 |  2.08        |
+| +               | +        | +          |      2221201019 |  2.34        |
 
 
 
@@ -307,5 +307,5 @@ uint32_t crc32_16(const char data[16]) {
 
 
 <p align="center">
-  <img src="https://latex.codecogs.com/png.latex?\dpi{120}\large%20\frac{2.00}{24}%20\times%201000%20\approx%2083" alt="Формула коэффициента ускорения" />
+  <img src="https://latex.codecogs.com/png.latex?\dpi{120}\large%20\frac{2.34}{24}%20\times%201000%20\approx%2098" alt="Формула коэффициента ускорения" />
 </p>

@@ -10,9 +10,11 @@
 #include "params.h"
 
 struct hashtable_elem_t {
-    char   buffer[STRING_SIZE];
+    char buffer[STRING_SIZE];
     size_t hash;
     size_t counter;
+
+    char aligning[16];
 };
 
 typedef hashtable_elem_t lst_data_t;

@@ -19,8 +19,8 @@ typedef hashtable_elem_t* (SearchFunc)(hashtable_t*, char[STRING_SIZE]);
 typedef uint32_t          (HashFunc)(const char*);
 
 struct hashtable_t {
-    bucket_t* buckets;
-    size_t size;
+    bucket_t*       buckets;
+    size_t          size;
 
     InsertFunc*     insert;
     SearchFunc*     search;
