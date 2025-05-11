@@ -9,7 +9,7 @@ OBJECTS = $(wildcard $(OBJ_DIR)/*.o)
 HEADERS_DIR = headers
 
 EXECUTABLE = hash-table
-EXECUTABLE_PROD = hash-table-prod
+EXECUTABLE_RELEASE = hash-table-release
 
 all:
 	make compile
@@ -27,15 +27,15 @@ hotspot:
 
 compile:
 	nasm -f elf64 $(SOURCES_DIR)/asm_funcs.asm -o $(SOURCES_DIR)/asm_funcs.o
-	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -g -O3 -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
+	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -fno-inline -g -O3 -no-pie -o $(BUILD_DIR)/$(EXECUTABLE) -I$(HEADERS_DIR) -mavx2
 
 
-compile_prod:
+compile_release:
 	nasm -f elf64 $(SOURCES_DIR)/asm_funcs.asm -o $(SOURCES_DIR)/asm_funcs.o
-	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -g -O3 -DNDEBUG -o $(BUILD_DIR)/$(EXECUTABLE_PROD) -I$(HEADERS_DIR) -mavx2
+	gcc $(C_SOURCES) $(SOURCES_DIR)/asm_funcs.o -g -O3 -no-pie -DNDEBUG -o $(BUILD_DIR)/$(EXECUTABLE_RELEASE) -I$(HEADERS_DIR) -mavx2
 
 run:
 	$(BUILD_DIR)/$(EXECUTABLE)
 
-run_prod:
-	$(BUILD_DIR)/$(EXECUTABLE_PROD)
+run_release:
+	$(BUILD_DIR)/$(EXECUTABLE_RELEASE)

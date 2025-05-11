@@ -16,6 +16,8 @@ int main() {
 
     hashtable_t htbl = init();
 
+    htbl.list_search = &list_search_asm_opt;
+
     FILE* fp_for_insert = fopen(processed_text, "r");
     if (fp_for_insert == NULL) { perror("Stream of processed text not opened"); return -1; }
 
@@ -34,15 +36,15 @@ int main() {
         search(&htbl, buffer);
     }
 
-    get_spectrum(&htbl);
-    check_word(&htbl, "you", html_stream);
+    //get_spectrum(&htbl);
+    //check_word(&htbl, "you", html_stream);
 
     destroy_hashtable(&htbl);
 
     if (fclose(fp_for_search) != 0) { perror("input stream not closed"); }
     if (fclose(html_stream)   != 0) { perror("html stream not closed");  }
 
-    run_tests(10);
+    run_tests(100);
 
     return 0;
 }

@@ -1,10 +1,10 @@
 #include "unit_testing.h"
 
 const Test_Hashtable_Funcs_Set Hashtable_Funcs_Set[] = {
-    {&insert, &search, &list_search,         &crc32},
-    {&insert, &search, &list_search_AVX,     &crc32},
-    {&insert, &search, &list_search_asm_opt, &crc32},
-    {&insert, &search, &list_search_asm_opt, &crc32_16},
+    {&insert, &search, &list_search,            &crc32},
+    {&insert, &search, &list_search_asm_opt,    &crc32},
+    {&insert, &search, &list_search_asm,        &crc32},
+    {&insert, &search, &list_search_asm,        &crc32_16},
 };
 
 const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtable_Funcs_Set[0]);
@@ -52,54 +52,53 @@ void run_tests(size_t num_of_tests) {
     hashtable_t htbl = {};
     char buffer[STRING_SIZE] = {};
 
+
+    htbl = init();
+    while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
+        htbl.insert(&htbl, buffer);
+    }
+
     for (size_t func_num = 0; func_num < NUM_OF_SETS_FOR_TEST; func_num++) {
 
-        htbl = init();
         insert_ticks_counter = 0;
         search_ticks_counter = 0;
 
-        htbl.insert      = Hashtable_Funcs_Set[func_num].insert;
+        //htbl.insert      = Hashtable_Funcs_Set[func_num].insert;
         htbl.search      = Hashtable_Funcs_Set[func_num].search;
         htbl.list_search = Hashtable_Funcs_Set[func_num].list_search;
         htbl.hash_func   = Hashtable_Funcs_Set[func_num].hash_func;
 
-        for (size_t test_num = 0; test_num < num_of_tests; test_num++) {
-            while (fgets(buffer, STRING_SIZE, fp_for_insert)) {
-                RDTSC_MEASURE(htbl.insert(&htbl, buffer), insert_ticks_counter);
-            }
 
+        //fseek(fp_for_insert, 0, SEEK_SET);
+
+        for (size_t test_num = 0; test_num < num_of_tests; test_num++) {
             while (fgets(buffer, STRING_SIZE, fp_for_search)) {
                 RDTSC_MEASURE(htbl.search(&htbl, buffer), search_ticks_counter);
             }
-
-            fseek(fp_for_insert, 0, SEEK_SET);
             fseek(fp_for_search, 0, SEEK_SET);
         }
 
         printf( "func number:  %ld\n"
-                "insert ticks: %ld\n"
                 "search ticks: %ld\n\n",
-                func_num, insert_ticks_counter, search_ticks_counter);
+                func_num, search_ticks_counter);
 
-        insert_test_results[func_num] = insert_ticks_counter;
+        //insert_test_results[func_num] = insert_ticks_counter;
         search_test_results[func_num] = search_ticks_counter;
 
-        destroy_hashtable(&htbl);
+        //destroy_hashtable(&htbl);
     }
 
-    double insert_benchmark_elem = static_cast<double>(insert_test_results[benchmark_index]);
+    //double insert_benchmark_elem = static_cast<double>(insert_test_results[benchmark_index]);
     double search_benchmark_elem = static_cast<double>(search_test_results[benchmark_index]);
 
     printf("-----Testing results-----\n");
     printf("Number of processor cycles per function:\n");
-    printf("            |             Insert         |            Search          |\n");
-    printf("Func Number | ticks          | benckmark | ticks          | benckmark |\n");
+    printf("            |            Search          |\n");
+    printf("Func Number | ticks          | benckmark |\n");
 
     for (size_t i = 0; i < NUM_OF_SETS_FOR_TEST; i++) {
-        printf("%11zu | %14lu | %9lf | %14lu | %9lf |\n",
+        printf("%11zu | %14lu | %9lf |\n",
                 i,
-                insert_test_results[i],
-                insert_benchmark_elem / insert_test_results[i],
                 search_test_results[i],
                 search_benchmark_elem / search_test_results[i]);
     }

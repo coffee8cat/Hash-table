@@ -17,7 +17,7 @@ extern const char* fname_size_distr_plot;
 extern const size_t size_distr_analysis_width;
 extern const size_t BUCKETS_NUM;
 
-#define STRING_SIZE 16
+#define STRING_SIZE 32
 //const hash_func;
 
 #endif

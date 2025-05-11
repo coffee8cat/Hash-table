@@ -1,6 +1,8 @@
 global list_search_asm
 global list_search_asm_preload
 global list_search_asm_opt
+extern strncmp
+
 section .text
 
 ;=======================================================================================
@@ -30,7 +32,7 @@ section .text
 ;    lst_index_t capacity;
 ;};
 
-list_search_asm:
+list_search_asm_str16cmp:
         push rbx
 
         ; rdi is list_t* list
@@ -74,8 +76,53 @@ list_search_asm:
         ret
 
 
-list_search_asm_opt:
+list_search_asm:
+;----------------------------------------------------------------------------------------------------------
+        ; rdi = list_t* lst
+        ; rsi = char key[STRING_SIZE] (STRING_SIZE=16)
+        push    r12                      ; save callee-saved regs
+        push    rbx
 
+        mov     r12, rsi                 ; r12 = key
+
+        mov     rcx, [rdi + 32]          ; rcx = list.free
+        mov     rbx, [rdi]               ; rbx = list.data
+        shl     rcx, 5                   ; rcx = rcx * sizeof(list.data[0])
+        add     rcx, rbx                 ; rcx = list.data[list.free]
+
+.search_loop:
+        cmp     rbx, rcx
+        jae     .return_null             ; if (curr >= end) return NULL
+
+        ; prepare args for strncmp
+        mov     rdi, rbx                 ; current elem
+        mov     rsi, r12                 ; key
+        mov     edx, 16                  ; comparison size
+        call    strncmp
+
+        test    eax, eax                 ; check match
+        je      .return_found
+
+        add     rbx, 32                  ; ++curr_elem_ptr
+        jmp     .search_loop
+
+.return_found:
+        mov     rax, rbx                 ; return pointer with matching string
+        jmp     .cleanup
+
+.return_null:
+        xor     eax, eax                 ; return NULL
+
+.cleanup:
+        pop     rbx                      ; restore callee-saved regs
+        pop     r12
+        ret
+
+
+list_search_asm_opt:
+        pxor xmm0, xmm0
+        pxor xmm1, xmm1
+        pxor xmm2, xmm2
         ; rdi = list_t* lst
         ; rsi = char key[STRING_SIZE]
 
@@ -90,16 +137,16 @@ list_search_asm_opt:
         ; rax - curr_elem_ptr
         ; rcx - last_elem_ptr
         cmp     rax, rcx
-        ja     .return_null              ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
+        ja     .return_null                ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
 
-        vmovdqu   xmm0, [rax]              ; curr_elem_ptr -> buffer
+        vmovdqa   xmm0, [rax]              ; curr_elem_ptr -> buffer
         vpcmpeqb  xmm2, xmm0, xmm1
         vpmovmskb edx, xmm2
 
         cmp     edx, 0xFFFF
         je      .return
 
-        add     rax, 32                  ; ++curr_elem_ptr
+        add     rax, 32                    ; ++curr_elem_ptr
         jmp     .search_loop
 
 .return_null:
@@ -128,7 +175,7 @@ list_search_asm_preload:
         cmp     rax, rcx
         ja     .return_null              ; if (curr_elem_ptr >= last_elem_ptr) { return NULL }
 
-        vmovdqu   xmm0, [rax]              ; curr_elem_ptr -> buffer
+        vmovdqa   xmm0, [rax]              ; curr_elem_ptr -> buffer
         vpcmpeqb  xmm2, xmm0, xmm1
         vpmovmskb edx, xmm2
 
