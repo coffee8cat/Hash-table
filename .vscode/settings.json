@@ -1,0 +1,15 @@
+{
+  "cSpell.language": "en,ru",
+  "cSpell.diagnosticLevel": "Hint",
+  "cSpell.enabledLanguageIds": [
+    "markdown",
+    "plaintext",
+    "json",
+    "yaml"
+  ],
+  "cSpell.words": [
+    "README",
+    "VSCode",
+    "WSL"
+  ]
+}
