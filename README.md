@@ -47,7 +47,7 @@
 
 ## Изменение параметров программы
 
-Изменение параметров хэш-таблицы, имен файлов для генерируемых графиков и файлов с входными данными: [params.cpp](src/params.cpp)
+Изменение параметров хэш-таблицы, имен файлов для генерируемых графиков и файлов с входными данными: [params.cpp](src/params.cpp).
 
 ## Анализ равномерности хэширования
 
@@ -138,7 +138,7 @@ list_search_asm:
         ; prepare args for strncmp
         mov     rdi, rbx                 ; current elem
         mov     rsi, r12                 ; key
-        mov     edx, 16                  ; comparison size
+        mov     edx, 32                  ; comparison size
         call    strncmp
 
         test    eax, eax                 ; check match
