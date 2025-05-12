@@ -46,6 +46,8 @@ void init_crc32_table();
 HashFunc crc32;
 HashFunc crc32_16;
 
+uint32_t crc32_32(const char data[32]);
+
 uint64_t MurmurHash64A(const void *key, size_t len, uint64_t seed);
 size_t djb2_hash(const char* string, size_t string_len);
 

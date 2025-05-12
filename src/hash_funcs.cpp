@@ -38,6 +38,25 @@ uint32_t crc32_16(const char data[STRING_SIZE]) {
     return crc ^ 0xFFFFFFFF;
 }
 
+
+uint32_t crc32_32(const char data[32]) {
+    uint32_t crc = 0xFFFFFFFF;
+
+    uint64_t part1 = *(const uint64_t*)(data);
+    crc = _mm_crc32_u64(crc, part1);
+
+    uint64_t part2 = *(const uint64_t*)(data + 8);
+    crc = _mm_crc32_u64(crc, part2);
+
+    uint64_t part3 = *(const uint64_t*)(data + 16);
+    crc = _mm_crc32_u64(crc, part3);
+
+    uint64_t part4 = *(const uint64_t*)(data + 24);
+    crc = _mm_crc32_u64(crc, part4);
+
+    return crc ^ 0xFFFFFFFF;
+}
+
 uint64_t MurmurHash64A(const void * key, size_t len, uint64_t seed) {
     assert(key);
 

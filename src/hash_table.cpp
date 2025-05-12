@@ -107,7 +107,7 @@ hashtable_elem_t* search_full_opt(hashtable_t* htbl, char word[STRING_SIZE]) {
     size_t word_len = strlen(word);
     memset(word + word_len, 0, STRING_SIZE - word_len);
 
-    size_t hash = crc32_16(word);
+    size_t hash = crc32_32(word);
     size_t bucket_index = hash % BUCKETS_NUM;
 
     return list_search_asm_preload(&(htbl -> buckets[bucket_index].data), word);
@@ -180,7 +180,7 @@ void insert_full_opt(hashtable_t* htbl, char word[STRING_SIZE]) {
     size_t word_len = strlen(word);
     memset(word + word_len, 0, STRING_SIZE - word_len);
 
-    size_t hash = crc32_16(word);
+    size_t hash = crc32_32(word);
     size_t index = hash % BUCKETS_NUM;
 
     bucket_t* temp_bucket = &(htbl -> buckets[index]);

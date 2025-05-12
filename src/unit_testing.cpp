@@ -4,7 +4,7 @@ const Test_Hashtable_Funcs_Set Hashtable_Funcs_Set[] = {
     {&insert, &search, &list_search,            &crc32},
     {&insert, &search, &list_search_asm_opt,    &crc32},
     {&insert, &search, &list_search_asm,        &crc32},
-    {&insert, &search, &list_search_asm,        &crc32_16},
+    {&insert, &search, &list_search_asm,        &crc32_32},
 };
 
 const size_t NUM_OF_SETS_FOR_TEST = sizeof(Hashtable_Funcs_Set) / sizeof(Hashtable_Funcs_Set[0]);
@@ -142,7 +142,7 @@ bool check_word (hashtable_t* htbl, const char* word, FILE* html_stream) {
         size_t word_len = strlen(buffer);
         memset(buffer + word_len, 0, STRING_SIZE - word_len);
 
-        size_t hash = crc32_16(buffer);
+        size_t hash = crc32_32(buffer);
         size_t bucket_index = hash % BUCKETS_NUM;
 
         list_dump(&(htbl -> buckets[bucket_index].data), html_stream);
